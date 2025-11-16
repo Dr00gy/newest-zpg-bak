@@ -1,0 +1,96 @@
+#version 330 core
+out vec4 fragColor;
+
+in vec3 FragPos;
+in vec3 Normal;
+
+struct Light {
+    vec3 position;
+    vec3 direction;
+    vec3 color;
+    float ambient;
+    float diffuse;
+    int type; // 0: POINT, 1: DIRECTIONAL, 2: REFLECTOR
+    float cutOff;
+    float outerCutOff;
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+#define MAX_LIGHTS 10
+uniform Light lights[MAX_LIGHTS];
+uniform int numLights;
+uniform vec3 objectColor;
+
+vec3 calcPointLight(Light light, vec3 norm) {
+    vec3 lightDir = normalize(light.position - FragPos);
+    float distance = length(light.position - FragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    
+    float diff = max(dot(norm, lightDir), 0.0);
+    
+    vec3 ambient = light.ambient * light.color;
+    vec3 diffuse = light.diffuse * diff * light.color;
+    
+    return (ambient + diffuse) * attenuation;
+}
+
+vec3 calcDirectionalLight(Light light, vec3 norm) {
+    vec3 lightDir = normalize(-light.direction);
+    float diff = max(dot(norm, lightDir), 0.0);
+    
+    vec3 ambient = light.ambient * light.color;
+    vec3 diffuse = light.diffuse * diff * light.color;
+    
+    return ambient + diffuse;
+}
+
+vec3 calcReflLight(Light light, vec3 norm) {
+    vec3 lightDir = normalize(light.position - FragPos);
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    
+    if (theta < light.outerCutOff) {
+        return light.ambient * light.color * intensity;
+    }
+    
+    float distance = length(light.position - FragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    
+    float diff = max(dot(norm, lightDir), 0.0);
+    
+    vec3 ambient = light.ambient * light.color;
+    vec3 diffuse = light.diffuse * diff * light.color;
+    
+    return (ambient + diffuse) * attenuation * intensity;
+}
+
+void main() {
+    vec3 norm = normalize(Normal);
+    if (length(Normal) < 0.01) {
+        fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        return;
+    }
+    
+    vec3 result = vec3(0.0);
+    if (numLights == 0) {
+        result = vec3(0.3) * objectColor;
+        fragColor = vec4(result, 1.0);
+        return;
+    }
+    
+    for (int i = 0; i < numLights && i < MAX_LIGHTS; i++) {
+        if (lights[i].type == 0) {
+            result += calcPointLight(lights[i], norm);
+        } else if (lights[i].type == 1) {
+            result += calcDirectionalLight(lights[i], norm);
+        } else if (lights[i].type == 2) {
+            result += calcReflLight(lights[i], norm);
+        }
+    }
+    
+    result *= objectColor;
+    fragColor = vec4(result, 1.0);
+}

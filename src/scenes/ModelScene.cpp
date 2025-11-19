@@ -66,37 +66,52 @@ void ModelScene::init() {
     modelShader2->updateAllLights();
     textureShader->updateAllLights();
 
+
+    glm::mat4 customIdentity = glm::mat4(1.0f);
+    customIdentity[3][3] = 20.0f;
+    auto customWTransform = std::make_shared<TransformMatrix>(customIdentity);
+
     auto plainTransform = std::make_shared<TransformComposite>();
+    plainTransform->add(customWTransform);
     plainTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
     plainTransform->add(std::make_shared<TransformScale>(glm::vec3(20.0f, 1.0f, 20.0f)));
     addObject(plainModel.get(), plainShader.get(), plainTransform, grassTexture.get());
 
+
     auto objTransform = std::make_shared<TransformComposite>();
+    objTransform->add(customWTransform);
     objTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
     objTransform->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
+    addObject(loginModel.get(), textureShader.get(), objTransform, loginTexture.get());
+
 
     auto objTransform2 = std::make_shared<TransformComposite>();
+    objTransform2->add(customWTransform);
     objTransform2->add(std::make_shared<TransformTranslation>(glm::vec3(8.0f, -1.0f, 8.0f)));
     objTransform2->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
+    addObject(houseModel.get(), textureShader.get(), objTransform2, houseTexture.get());
+
 
     auto objTransform3 = std::make_shared<TransformComposite>();
+    objTransform3->add(customWTransform);
     objTransform3->add(std::make_shared<TransformTranslation>(glm::vec3(-2.0f, -1.0f, -2.0f)));
     objTransform3->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
+    addObject(formulaModel.get(), modelShader2.get(), objTransform3);
+
 
     auto objTransform4 = std::make_shared<TransformComposite>();
+    objTransform4->add(customWTransform);
     objTransform4->add(std::make_shared<TransformTranslation>(glm::vec3(4.0f, -1.0f, 4.0f)));
     objTransform4->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f)));
     objTransform4->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
+    addObject(cupModel.get(), textureShader.get(), objTransform4, goldTexture.get());
+
 
     auto objTransform5 = std::make_shared<TransformComposite>();
+    objTransform5->add(customWTransform);
     objTransform5->add(std::make_shared<TransformTranslation>(glm::vec3(-4.0f, -1.0f, -4.0f)));
     objTransform5->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f)));
     objTransform5->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
-
-    addObject(loginModel.get(), textureShader.get(), objTransform, loginTexture.get());
-    addObject(houseModel.get(), textureShader.get(), objTransform2, houseTexture.get());
-    addObject(formulaModel.get(), modelShader2.get(), objTransform3);
-    addObject(cupModel.get(), textureShader.get(), objTransform4, goldTexture.get());
     addObject(bicycleModel.get(), textureShader.get(), objTransform5, goldTexture.get());
 }
 
@@ -141,6 +156,8 @@ void ModelScene::drawSkybox() {
     }
 }
 
+
+
 void ModelScene::draw() {
     drawSkybox();
     
@@ -157,6 +174,8 @@ void ModelScene::draw() {
     
     drawImpl();
 }
+
+
 
 void ModelScene::attachToCamera(Camera* camera) {
     attachToCameraImpl(camera);

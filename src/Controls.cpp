@@ -5,6 +5,7 @@
 #include "Camera.hpp"
 #include "scenes/MultiShaderForestScene.hpp"
 #include "scenes/ModelScene.hpp"
+#include "scenes/WhackAMoleScene.hpp"
 
 Controls::Controls(GLFWwindow* window, Camera* camera)
     : window(window),
@@ -192,4 +193,24 @@ void Controls::processMouseHover(MultiShaderForestScene* forestScene) {
 
 bool Controls::shouldClose() const {
     return glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+}
+
+void Controls::processWhackAMoleInput(WhackAMoleScene* whackAMoleScene) {
+    if (!whackAMoleScene) return;
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    
+    whackAMoleScene->updateMouseHover(xpos, ypos, width, height);
+    
+    static bool wasLeftPressed = false;
+    bool isLeftPressed = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    
+    if (isLeftPressed && !wasLeftPressed) {
+        whackAMoleScene->handleMouseClick(xpos, ypos, width, height);
+    }
+    
+    wasLeftPressed = isLeftPressed;
 }

@@ -64,15 +64,13 @@ void App::init() {
         }
     });
 
-    scenes.push_back(std::make_unique<RotatingTriangleScene>());
-    scenes.push_back(std::make_unique<RandomObjectsScene>());
-    scenes.push_back(std::make_unique<SymmetricalBallsScene>());
-    scenes.push_back(std::make_unique<ForestScene>());
-    scenes.push_back(std::make_unique<MultiShaderForestScene>());
     scenes.push_back(std::make_unique<SolarSystemScene>());
+    scenes.push_back(std::make_unique<MultiShaderForestScene>());
+    scenes.push_back(std::make_unique<SymmetricalBallsScene>());
     scenes.push_back(std::make_unique<CorrectOneBallScene>());
     scenes.push_back(std::make_unique<WrongOneBallScene>());
     scenes.push_back(std::make_unique<ModelScene>());
+    scenes.push_back(std::make_unique<WhackAMoleScene>());
 
     for (auto& scene : scenes) {
         scene->init();
@@ -98,6 +96,11 @@ void App::run() {
         MultiShaderForestScene* forestScene = dynamic_cast<MultiShaderForestScene*>(scenes[currentSceneIndex].get());
         controls->processFlashlightToggle(forestScene);
         controls->processEditModeToggle(forestScene);
+        WhackAMoleScene* whackAMoleScene = dynamic_cast<WhackAMoleScene*>(scenes[currentSceneIndex].get());
+        if (whackAMoleScene) {
+            whackAMoleScene->update(deltaTime);
+        }
+        controls->processWhackAMoleInput(whackAMoleScene);
         controls->processMouseHover(forestScene);
         
         ModelScene* modelScene = dynamic_cast<ModelScene*>(scenes[currentSceneIndex].get());

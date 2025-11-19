@@ -28,5 +28,6 @@ add_executable(kms
     src/scenes/CorrectOneBallScene.cpp
     src/scenes/WrongOneBallScene.cpp
     src/scenes/ModelScene.cpp
+    src/scenes/WhackAMoleScene.cpp
     )
 target_link_libraries(kms glfw GL X11 GLEW::GLEW assimp SOIL ${SDL2_LIBRARIES})

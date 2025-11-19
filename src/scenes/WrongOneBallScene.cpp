@@ -8,7 +8,7 @@ void WrongOneBallScene::init() {
     std::string fragSrc   = loadShaderSource("src/shaders/frag_phong.glsl");
     shader = std::make_unique<Shader>(vertexSrc.c_str(), fragSrc.c_str());
 
-    sphereModel = ModelFactory::CreateSphere();
+    sphereModel = ModelFactory::CreatePlainSphere();
 
     light = std::make_unique<Light>(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     light->setAmbient(0.1f);

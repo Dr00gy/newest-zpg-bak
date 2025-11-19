@@ -28,7 +28,7 @@ void MultiShaderForestScene::init() {
     bushModel = ModelFactory::CreateBush();
     treeModel = ModelFactory::CreateTree();
     plainModel = ModelFactory::CreatePlain();
-    sphereModel = ModelFactory::CreateSphere();
+    sphereModel = ModelFactory::CreatePlainSphere();
     shrekModel = ModelFactory::CreateShrek();
     fionaModel = ModelFactory::CreateFiona();
     toiletModel = ModelFactory::CreateToilet();

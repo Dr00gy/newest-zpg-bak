@@ -4,6 +4,7 @@
 class Camera;
 class MultiShaderForestScene;
 class ModelScene;
+class WhackAMoleScene;
 
 class Controls {
 public:
@@ -15,6 +16,7 @@ public:
     void processFlashlightToggle(MultiShaderForestScene* forestScene);
     void processSkyboxToggle(ModelScene* modelScene);
     void processEditModeToggle(MultiShaderForestScene* forestScene);
+    void processWhackAMoleInput(WhackAMoleScene* whackAMoleScene);
     void processMouseHover(MultiShaderForestScene* forestScene);
     bool shouldClose() const;
 

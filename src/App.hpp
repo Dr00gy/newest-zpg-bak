@@ -24,6 +24,7 @@
 #include "scenes/CorrectOneBallScene.hpp"
 #include "scenes/WrongOneBallScene.hpp"
 #include "scenes/ModelScene.hpp"
+#include "scenes/WhackAMoleScene.hpp"
 
 class App {
 public:

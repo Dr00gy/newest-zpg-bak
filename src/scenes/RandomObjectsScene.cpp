@@ -17,7 +17,7 @@ void RandomObjectsScene::init() {
     shader3 = std::make_unique<Shader>(vertexSrc.c_str(), fragGreenSrc.c_str());
 
     cubeModel = ModelFactory::CreateCube();
-    sphereModel = ModelFactory::CreateSphere();
+    sphereModel = ModelFactory::CreatePlainSphere();
 
     for (int i = 0; i < 10; ++i) {
         auto cubeTransform = std::make_shared<TransformComposite>();

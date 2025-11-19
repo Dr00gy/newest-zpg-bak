@@ -37,6 +37,10 @@ public:
         return Model::LoadFromHeader(plain, sizeof(plain), 8, type);
     }
 
+    static std::unique_ptr<Model> CreatePlainSphere() {
+        return Model::LoadFromFile("src/objects/planet.obj", ModelType::UV);
+    }
+
     static std::unique_ptr<Model> CreateLogin() {
         return Model::LoadFromFile("src/objects/dalin.obj", ModelType::UV);
     }
@@ -71,5 +75,9 @@ public:
 
     static std::unique_ptr<Model> CreateShroom() {
         return Model::LoadFromFile("src/objects/mushromms.obj", ModelType::UV);
+    }
+
+    static std::unique_ptr<Model> CreateHammer() {
+        return Model::LoadFromFile("src/objects/hammer.obj", ModelType::UV);
     }
 };

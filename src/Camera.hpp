@@ -40,6 +40,28 @@ public:
     void processMouseScroll(float yoffset);
     void updateAspectRatio(float width, float height);
 
+        void setPosition(const glm::vec3& pos) {
+        position = pos;
+        lastChangeType = ChangeType::VIEW;
+        notify();
+    }
+    
+    void setPitch(float p) {
+        pitch = p;
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
+        updateCameraVectors();
+        lastChangeType = ChangeType::VIEW;
+        notify();
+    }
+    
+    void setYaw(float y) {
+        yaw = y;
+        updateCameraVectors();
+        lastChangeType = ChangeType::VIEW;
+        notify();
+    }
+
 private:
     void updateCameraVectors();
     

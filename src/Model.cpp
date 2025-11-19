@@ -115,9 +115,8 @@ std::unique_ptr<Model> Model::LoadFromFile(const std::string& path, ModelType ty
           aiProcess_Triangulate
         | aiProcess_OptimizeMeshes
         | aiProcess_JoinIdenticalVertices
-        | aiProcess_Triangulate
         | aiProcess_CalcTangentSpace
-        | aiProcess_GenNormals
+        | aiProcess_GenSmoothNormals
         | aiProcess_GenUVCoords;
 
     const aiScene* scene = importer.ReadFile(path, importOptions);

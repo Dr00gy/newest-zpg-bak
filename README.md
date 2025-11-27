@@ -1,1 +1,1 @@
-Do cmake ., make and run the kms.
+Do `cmake .`, `make` and run the kms.

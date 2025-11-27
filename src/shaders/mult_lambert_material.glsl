@@ -14,10 +14,18 @@ struct Light {
     float quadratic;
 };
 
+struct Material {
+    float shininess;
+    float ambient;
+    float diffuse;
+    float specular;
+};
+
 #define MAX_LIGHTS 10
 uniform Light lights[MAX_LIGHTS];
 uniform int numLights;
 uniform vec3 objectColor;
+uniform Material material;
 
 in vec3 FragPos;
 in vec3 Normal;
@@ -31,8 +39,8 @@ vec3 calcPointLight(Light light, vec3 norm) {
     
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     return (ambient + diffuse) * attenuation;
 }
@@ -41,8 +49,8 @@ vec3 calcDirectionalLight(Light light, vec3 norm) {
     vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     return ambient + diffuse;
 }
@@ -54,7 +62,7 @@ vec3 calcReflLight(Light light, vec3 norm) {
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     
     if (theta < light.outerCutOff) {
-        return light.ambient * light.color * intensity;
+        return light.ambient * light.color * material.ambient * intensity;
     }
     
     float distance = length(light.position - FragPos);
@@ -62,8 +70,8 @@ vec3 calcReflLight(Light light, vec3 norm) {
     
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     return (ambient + diffuse) * attenuation * intensity;
 }
@@ -73,7 +81,7 @@ void main() {
     
     vec3 result = vec3(0.0);
     if (numLights == 0) {
-        result = vec3(0.3) * objectColor;
+        result = vec3(0.3) * objectColor * material.ambient;
         fragColor = vec4(result, 1.0);
         return;
     }

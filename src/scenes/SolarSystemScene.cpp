@@ -4,47 +4,32 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 
-std::string SolarSystemScene::loadShaderSource(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open shader file: " << filePath << std::endl;
-        return "";
-    }
-    
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
-
-glm::vec3 calculateEllipticalOrbit(float time, float speed, float radiusWide, float radiusNarrow) {
+glm::vec3 calculateEllipticalOrbit(float time, float speed, float axisWide, float axisNarrow) {
     float angle = fmod(time * speed, 2.0f * M_PI);
-    
-    float distanceFromSun = sqrt(radiusWide * radiusWide * cos(angle) * cos(angle) + 
-                                  radiusNarrow * radiusNarrow * sin(angle) * sin(angle));
+    float distanceFromSun = sqrt(axisWide * axisWide * cos(angle) * cos(angle) + 
+                                  axisNarrow * axisNarrow * sin(angle) * sin(angle));
     
     float speedMultiplier = 1.0f / (distanceFromSun);
     angle += speedMultiplier * 2.0f;
     
     glm::vec3 position(
-        radiusWide * cos(angle),
+        axisWide * cos(angle),
         0.0f,
-        radiusNarrow * sin(angle)
+        axisNarrow * sin(angle)
     );
     
     return position;
 }
 
 void SolarSystemScene::init() {
-    std::string vertexSrc = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragSrc = loadShaderSource("src/shaders/frag_lambert.glsl");
+    std::string vertexSrc = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string vertexTexturedSrc = loadShaderSrc("src/shaders/vertex_textured.glsl");
+    std::string fragSrc = loadShaderSrc("src/shaders/frag_lambert.glsl");
+    std::string fragSrc2 = loadShaderSrc("src/shaders/frag_rectangle.glsl");
+    std::string fragTexturedSrc = loadShaderSrc("src/shaders/frag_lambert_textured.glsl");
+
     shader = std::make_unique<Shader>(vertexSrc.c_str(), fragSrc.c_str());
-
-    std::string vertexSrc2 = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragSrc2 = loadShaderSource("src/shaders/frag_rectangle.glsl");
-    shaderSun = std::make_unique<Shader>(vertexSrc2.c_str(), fragSrc2.c_str());
-
-    std::string vertexTexturedSrc = loadShaderSource("src/shaders/vertex_textured.glsl");
-    std::string fragTexturedSrc = loadShaderSource("src/shaders/frag_lambert_textured.glsl");
+    shaderSun = std::make_unique<Shader>(vertexSrc.c_str(), fragSrc2.c_str());
     texturedShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragTexturedSrc.c_str());
 
     sphereModel = ModelFactory::CreatePlainSphere();
@@ -76,36 +61,39 @@ void SolarSystemScene::init() {
     texturedShader->updateAllLights();
 
     sunTransform = std::make_shared<TransformComposite>();
-    sunTransform->add(std::make_shared<TransformScale>(glm::vec3(1.5f, 1.5f, 1.5f)));
+    sunTransform->add(std::make_shared<TransformIdentity>());
     addObject(sphereModel.get(), texturedShader.get(), sunTransform, sunTexture.get());
 
+    Texture* planetTextures[] = {
+        mercuryTexture.get(), venusTexture.get(), earthTexture.get(), marsTexture.get(),
+        jupiterTexture.get(), saturnTexture.get(), uranusTexture.get(), neptuneTexture.get()
+    };
     for (int i = 0; i < 8; i++) {
         auto planetTransform = std::make_shared<TransformComposite>();
         planetTransform->add(std::make_shared<TransformIdentity>());
         planetTransforms.push_back(planetTransform);
-        
-        Texture* planetTextures[] = {
-            mercuryTexture.get(), venusTexture.get(), earthTexture.get(), marsTexture.get(),
-            jupiterTexture.get(), saturnTexture.get(), uranusTexture.get(), neptuneTexture.get()
-        };
         addObject(sphereModel.get(), texturedShader.get(), planetTransform, planetTextures[i]);
-        
+
         auto moonTransform = std::make_shared<TransformComposite>();
         moonTransform->add(std::make_shared<TransformIdentity>());
         moonTransforms.push_back(moonTransform);
-        addObject(sphereModel.get(), texturedShader.get(), moonTransform, moonTexture.get());
+        addObject(
+            sphereModel.get(),
+            texturedShader.get(),
+            moonTransform,
+            (i > 1 ? moonTexture.get() : nullptr)
+        );
     }
 }
 
 void SolarSystemScene::draw() {
     float time = static_cast<float>(glfwGetTime());
-
     shader->use();
     light->updateObservers();
 
     struct PlanetData {
-        float radiusWide;
-        float radiusNarrow;
+        float axisWide;
+        float axisNarrow;
         float orbitalSpeed;
         float scale;
         float moonOrbitRadius;
@@ -113,59 +101,57 @@ void SolarSystemScene::draw() {
         float moonScale;
         float rotationSpeed;
     };
-    
     std::vector<PlanetData> planets = {
-        {3.0f, 2.0f, 0.8f, 0.25f, 0.4f, 3.0f, 0.08f, 2.0f},
-        {4.5f, 4.5f, 0.6f, 0.35f, 0.5f, 2.5f, 0.10f, 1.5f},
-        {6.0f, 5.5f, 0.5f, 0.35f, 0.6f, 2.0f, 0.12f, 1.8f},
-        {7.5f, 6.8f, 0.4f, 0.30f, 0.5f, 2.2f, 0.10f, 1.7f},
-        {10.0f, 9.5f, 0.25f, 1.2f, 1.2f, 1.5f, 0.15f, 2.5f},
-        {13.0f, 12.0f, 0.20f, 0.70f, 1.5f, 1.2f, 0.15f, 2.3f},
-        {16.0f, 15.0f, 0.15f, 0.50f, 1.0f, 1.5f, 0.12f, 2.0f},
-        {19.0f, 18.5f, 0.12f, 0.45f, 1.0f, 1.5f, 0.10f, 1.9f}
+        {3.0f, 2.0f, 2.0f, 0.25f, 0.4f, 3.0f, 0.08f, 2.0f}, // mercury
+        {4.5f, 4.5f, 1.5f, 0.35f, 0.5f, 2.5f, 0.10f, 1.5f}, // venus
+        {6.0f, 5.5f, 1.0f, 0.35f, 0.6f, 2.0f, 0.12f, 1.8f}, // earth
+        {7.5f, 6.8f, 0.7f, 0.30f, 0.5f, 2.2f, 0.10f, 1.7f}, //mars
+        {10.0f, 9.5f, 0.3f, 1.2f, 2.0f, 1.5f, 0.15f, 2.5f}, //jupiter
+        {13.0f, 12.0f, 0.2f, 0.70f, 1.5f, 1.2f, 0.15f, 2.3f}, // saturn
+        {16.0f, 15.0f, 0.1f, 0.50f, 1.0f, 1.5f, 0.12f, 2.0f}, // uranus
+        {19.0f, 18.5f, 0.07f, 0.45f, 1.0f, 1.5f, 0.10f, 1.9f} // neptune
     };
 
     float sunRotation = fmod(time * 20.0f, 360.0f); 
-    auto newSunTransform = std::make_shared<TransformComposite>();
-    newSunTransform->add(std::make_shared<TransformRotation>(sunRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
-    newSunTransform->add(std::make_shared<TransformScale>(glm::vec3(1.5f, 1.5f, 1.5f)));
-    sunTransform = newSunTransform;
-    objects[0].transform = newSunTransform;
+    auto upSunTransform = std::make_shared<TransformComposite>();
+    upSunTransform->add(std::make_shared<TransformRotation>(sunRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
+    upSunTransform->add(std::make_shared<TransformScale>(glm::vec3(1.5f, 1.5f, 1.5f)));
+    sunTransform = upSunTransform;
+    objects[0].transform = upSunTransform;
 
-    for (size_t i = 0; i < planets.size(); i++) {
+    for (int i = 0; i < planets.size(); i++) {
         const auto& planet = planets[i];
-        
         glm::vec3 orbitPosition = calculateEllipticalOrbit(time, planet.orbitalSpeed, 
-                                                           planet.radiusWide, planet.radiusNarrow);
+                                                           planet.axisWide, planet.axisNarrow);
         
         float planetRotation = fmod(time * planet.rotationSpeed * 50.0f, 360.0f);
-        auto newPlanetTransform = std::make_shared<TransformComposite>();
-        newPlanetTransform->add(std::make_shared<TransformTranslation>(orbitPosition));
-        newPlanetTransform->add(std::make_shared<TransformRotation>(planetRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
-        newPlanetTransform->add(std::make_shared<TransformScale>(glm::vec3(planet.scale)));
-        planetTransforms[i] = newPlanetTransform;
-        objects[1 + i * 2].transform = newPlanetTransform;
+        auto upPlanetTransform = std::make_shared<TransformComposite>();
+        upPlanetTransform->add(std::make_shared<TransformTranslation>(orbitPosition));
+        upPlanetTransform->add(std::make_shared<TransformRotation>(planetRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
+        upPlanetTransform->add(std::make_shared<TransformScale>(glm::vec3(planet.scale)));
+        planetTransforms[i] = upPlanetTransform;
+        objects[1 + i * 2].transform = upPlanetTransform;
         
-        float moonAngle = time * planet.moonSpeed;
-        glm::vec3 moonOffset(
-            planet.moonOrbitRadius * cos(moonAngle),
-            0.0f,
-            planet.moonOrbitRadius * sin(moonAngle)
-        );
-        
-        float moonRotation = fmod(time * planet.moonSpeed * 20.0f, 360.0f);
-        auto newMoonTransform = std::make_shared<TransformComposite>();
-        newMoonTransform->add(std::make_shared<TransformTranslation>(orbitPosition + moonOffset));
-        newMoonTransform->add(std::make_shared<TransformRotation>(moonRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
-        newMoonTransform->add(std::make_shared<TransformScale>(glm::vec3(planet.moonScale)));
-        moonTransforms[i] = newMoonTransform;
-        objects[2 + i * 2].transform = newMoonTransform;
-    }
+        if (i > 1) {
+            float moonAngle = time * planet.moonSpeed;
+            glm::vec3 moonOffset(
+                planet.moonOrbitRadius * cos(moonAngle),
+                0.0f,
+                planet.moonOrbitRadius * sin(moonAngle)
+            );
 
+            float moonRotation = fmod(time * planet.moonSpeed * 20.0f, 360.0f);
+            auto upMoonTransform = std::make_shared<TransformComposite>();
+            upMoonTransform->add(std::make_shared<TransformTranslation>(orbitPosition + moonOffset));
+            upMoonTransform->add(std::make_shared<TransformRotation>(moonRotation, glm::vec3(0.0f, 1.0f, 0.0f)));
+            upMoonTransform->add(std::make_shared<TransformScale>(glm::vec3(planet.moonScale)));
+            moonTransforms[i] = upMoonTransform;
+            objects[2 + i * 2].transform = upMoonTransform;
+        }
+    }
     glUseProgram(0);
 
     objects[0].shader->use();
-
     if (objects[0].texture) {
         objects[0].texture->bind(0);
         objects[0].shader->SetUniform("textureSampler", 0);
@@ -175,21 +161,17 @@ void SolarSystemScene::draw() {
         objects[0].shader->SetUniform("sunGlow", 2.0f);
     }
 
-    if (attachedCamera)
-        objects[0].shader->SetUniform("viewPos", attachedCamera->getPosition());
-
+    if (attachedCamera) objects[0].shader->SetUniform("viewPos", attachedCamera->getPosition());
     glm::mat4 model = objects[0].transform->getMatrix();
     objects[0].shader->SetUniform("model", model);
     objects[0].model->draw(GL_TRIANGLES);
-
     if (objects[0].texture) {
         objects[0].texture->unbind();
     }
-
     glUseProgram(0);
 
-    for (size_t i = 0; i < planets.size(); i++) {
-        size_t planetIdx = 1 + i * 2;
+    for (int i = 0; i < planets.size(); i++) {
+        int planetIdx = 1 + i * 2;
         objects[planetIdx].shader->use();
         
         if (objects[planetIdx].texture) {
@@ -199,8 +181,7 @@ void SolarSystemScene::draw() {
         }
         
         objects[planetIdx].shader->SetUniform("shininess", 32.0f);
-        if (attachedCamera)
-            objects[planetIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
+        if (attachedCamera) objects[planetIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
         model = objects[planetIdx].transform->getMatrix();
         objects[planetIdx].shader->SetUniform("model", model);
         objects[planetIdx].shader->SetUniform("isSun", false);
@@ -211,7 +192,7 @@ void SolarSystemScene::draw() {
         }
         glUseProgram(0);
         
-        size_t moonIdx = 2 + i * 2;
+        int moonIdx = 2 + i * 2;
         objects[moonIdx].shader->use();
         
         if (objects[moonIdx].texture) {
@@ -222,8 +203,7 @@ void SolarSystemScene::draw() {
         }
         
         objects[moonIdx].shader->SetUniform("shininess", 32.0f);
-        if (attachedCamera)
-            objects[moonIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
+        if (attachedCamera) objects[moonIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
         model = objects[moonIdx].transform->getMatrix();
         objects[moonIdx].shader->SetUniform("model", model);
         objects[moonIdx].model->draw(GL_TRIANGLES);
@@ -234,8 +214,7 @@ void SolarSystemScene::draw() {
         glUseProgram(0);
     }
     
-    if (attachedCamera)
-        objects.back().shader->SetUniform("viewPos", attachedCamera->getPosition());
+    if (attachedCamera) objects.back().shader->SetUniform("viewPos", attachedCamera->getPosition());
     model = objects.back().transform->getMatrix();
     objects.back().shader->SetUniform("model", model);
 

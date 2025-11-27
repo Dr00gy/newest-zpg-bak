@@ -1,8 +1,10 @@
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
 #include <set>
+
 #include "../Utils.hpp"
 #include "../trans/Transform.hpp"
 #include "../trans/TransformComposite.hpp"
@@ -11,11 +13,14 @@
 #include "../trans/TransformRotation.hpp"
 #include "../trans/TransformScale.hpp"
 #include "../trans/TransformTranslation.hpp"
+#include "../trans/TransformLinear.hpp"
+#include "../trans/TransformBezier.hpp"
 #include "../ModelFactory.hpp"
-#include "../Light.hpp"
-#include "../Shader.hpp"
+#include "../renderers/Light.hpp"
+#include "../renderers/Shader.hpp"
 #include "../Model.hpp"
-#include "../Texture.hpp"
+#include "../renderers/Texture.hpp"
+#include "../renderers/Material.hpp"
 #include "../DrawableObject.hpp"
 #include "../Camera.hpp"
 
@@ -29,9 +34,9 @@ public:
     virtual void draw() = 0;
     virtual void attachToCamera(Camera* camera) = 0;
     virtual void detachFromCamera(Camera* camera) = 0;
-
-    void addObject(Model* model, Shader* shader, std::shared_ptr<Transform> transform, Texture* texture = nullptr) {
-        objects.push_back({model, shader, transform, texture});
+    void addObject(Model* model, Shader* shader, std::shared_ptr<Transform> transform, 
+                   Texture* texture = nullptr, Material material = Material::Plastic()) {
+        objects.push_back({model, shader, transform, texture, material});
     }
     
     void attachToCameraImpl(Camera* camera) {
@@ -60,6 +65,10 @@ public:
     void drawImpl() {
         for (auto& obj : objects) {
             obj.shader->use();
+            obj.shader->SetUniform("material.shininess", obj.material.getShininess());
+            obj.shader->SetUniform("material.ambient", obj.material.getAmbient());
+            obj.shader->SetUniform("material.diffuse", obj.material.getDiffuse());
+            obj.shader->SetUniform("material.specular", obj.material.getSpecular());
             
             if (obj.texture) {
                 obj.texture->bind(0);
@@ -71,7 +80,6 @@ public:
             
             glm::mat4 model = obj.transform->getMatrix();
             obj.shader->SetUniform("model", model);
-            
             obj.model->draw(GL_TRIANGLES);
             
             if (obj.texture) {

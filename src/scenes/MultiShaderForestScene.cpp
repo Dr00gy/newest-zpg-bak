@@ -9,21 +9,19 @@
 void MultiShaderForestScene::init() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    std::string vertexSrc = loadShaderSource("src/shaders/vertex.glsl");
-    std::string vertexTexturedSrc = loadShaderSource("src/shaders/vertex_textured.glsl");
-    std::string fragLambertSrc = loadShaderSource("src/shaders/mult_lambert.glsl");
-    std::string fragPhongSrc = loadShaderSource("src/shaders/mult_phong.glsl");
-    std::string fragBlinnSrc = loadShaderSource("src/shaders/mult_blinn.glsl");
-    std::string fragPhongTexturedSrc = loadShaderSource("src/shaders/mult_phong_textured.glsl");
-    std::string fragTriangleSrc = loadShaderSource("src/shaders/frag_triangle.glsl");
-    std::string fragStencilSrc = loadShaderSource("src/shaders/stencil.glsl");
+    std::string vertexSrc = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string vertexTexturedSrc = loadShaderSrc("src/shaders/vertex_textured.glsl");
+    std::string fragLambertSrc = loadShaderSrc("src/shaders/mult_lambert.glsl");
+    std::string fragPhongSrc = loadShaderSrc("src/shaders/mult_phong.glsl");
+    std::string fragBlinnSrc = loadShaderSrc("src/shaders/mult_blinn.glsl");
+    std::string fragPhongTexturedSrc = loadShaderSrc("src/shaders/mult_phong_textured.glsl");
+    std::string fragTriangleSrc = loadShaderSrc("src/shaders/frag_triangle.glsl");
 
     lambertShader = std::make_unique<Shader>(vertexSrc.c_str(), fragLambertSrc.c_str());
     phongShader = std::make_unique<Shader>(vertexSrc.c_str(), fragPhongSrc.c_str());
     blinnShader = std::make_unique<Shader>(vertexSrc.c_str(), fragBlinnSrc.c_str());
     phongTexturedShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedSrc.c_str());
     triangleShader = std::make_unique<Shader>(vertexSrc.c_str(), fragTriangleSrc.c_str());
-    stencilShader = std::make_unique<Shader>(vertexSrc.c_str(), fragStencilSrc.c_str());
 
     bushModel = ModelFactory::CreateBush();
     treeModel = ModelFactory::CreateTree();
@@ -169,14 +167,40 @@ void MultiShaderForestScene::init() {
     plainTransform->add(std::make_shared<TransformScale>(glm::vec3(20.0f, 1.0f, 20.0f)));
     addObject(plainModel.get(), phongTexturedShader.get(), plainTransform, grassTexture.get());
 
-    for (size_t i = 0; i < lights.size(); ++i) {
+    // FIREFLIES INIT HERE
+    for (int i = 0; i < lights.size(); ++i) {
+        float radius, height;
+        switch(i) {
+            case 0:
+                radius = 5.0f;
+                height = 3.0f;
+                break;
+            case 1:
+                radius = 5.0f;
+                height = 3.0f;
+                break;
+            case 2:
+                radius = 8.0f;
+                height = 5.0f;
+                break;
+            case 3:
+                radius = 8.0f;
+                height = 2.0f;
+                break;
+        }
+        
+        auto rotation = std::make_shared<TransformRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        fireflyRotations.push_back(rotation);
+        
         auto sphereTransform = std::make_shared<TransformComposite>();
-        sphereTransform->add(std::make_shared<TransformTranslation>(lights[i]->getPosition()));
+        sphereTransform->add(rotation);
+        sphereTransform->add(std::make_shared<TransformTranslation>(glm::vec3(radius, height, 0.0f)));
         sphereTransform->add(std::make_shared<TransformScale>(glm::vec3(0.1f)));
         
         lightSpheres.push_back({lights[i].get(), objects.size()});
         addObject(sphereModel.get(), phongShader.get(), sphereTransform);
     }
+    // NO LONGER FIREFLIES INIT
 
     Shader* lightingShaders[] = {
         lambertShader.get(),
@@ -193,7 +217,6 @@ void MultiShaderForestScene::init() {
         bushTransform->add(std::make_shared<TransformRotation>(
             static_cast<float>(rand() % 360), glm::vec3(0.0f, 1.0f, 0.0f)
         ));
-        
         float scale = 0.3f + ((rand() % 50) / 100.0f);
         bushTransform->add(std::make_shared<TransformScale>(glm::vec3(scale, scale, scale)));
         
@@ -203,62 +226,74 @@ void MultiShaderForestScene::init() {
 
     for (int i = 0; i < 50; ++i) {
         auto treeTransform = std::make_shared<TransformComposite>();
-        
         float x = ((rand() % 400) / 10.0f) - 20.0f;
         float z = ((rand() % 400) / 10.0f) - 20.0f;
         treeTransform->add(std::make_shared<TransformTranslation>(glm::vec3(x, -1.0f, z)));
-        
         treeTransform->add(std::make_shared<TransformRotation>(
             static_cast<float>(rand() % 360), glm::vec3(0.0f, 1.0f, 0.0f)
         ));
-        
         float scale = 0.5f + ((rand() % 70) / 100.0f);
         treeTransform->add(std::make_shared<TransformScale>(glm::vec3(scale, scale, scale)));
         
         Shader* selectedShader = lightingShaders[rand() % numShaders];
-        
         addObject(treeModel.get(), selectedShader, treeTransform);
     }
 
+    std::vector<glm::vec3> bezierPoints = {
+        glm::vec3(-3.0f, -1.0f, -2.0f),
+        glm::vec3(-3.0f, -1.0f, -1.0f),
+        glm::vec3(-1.0f, -1.0f, -1.0f),
+        glm::vec3(0.0f, -1.0f, 0.0f),
+
+        glm::vec3(1.0f, -1.0f, 1.0f),
+        glm::vec3(3.0f, -1.0f, 1.0f),
+        glm::vec3(5.0f, -1.0f, 5.0f),
+
+        glm::vec3(5.0f, -1.0f, 7.0f),
+        glm::vec3(1.0f, -1.0f, 8.0f),
+        glm::vec3(0.0f, -1.0f, 5.0f),
+
+        glm::vec3(-1.0f, -1.0f, -1.0f),
+        glm::vec3(-3.0f, -1.0f, -1.0f),
+        glm::vec3(-3.0f, -1.0f, -2.0f)
+    };
+
+    shrekBezierTrans = std::make_shared<TransformBezier>(bezierPoints, 0.0f);
     auto shrekTransform = std::make_shared<TransformComposite>();
-    shrekTransform->add(std::make_shared<TransformTranslation>(glm::vec3(1.0f, -1.0f, 1.0f)));
+    shrekTransform->add(shrekBezierTrans);
+    shrekObjectIndex = objects.size();
+    addObject(shrekModel.get(), phongTexturedShader.get(), shrekTransform, shrekTexture.get());
+
     auto fionaTransform = std::make_shared<TransformComposite>();
     fionaTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
     auto toiletTransform = std::make_shared<TransformComposite>();
     toiletTransform->add(std::make_shared<TransformTranslation>(glm::vec3(-3.0f, -1.0f, -3.0f)));
-
-    addObject(shrekModel.get(), phongTexturedShader.get(), shrekTransform, shrekTexture.get());
     addObject(fionaModel.get(), phongTexturedShader.get(), fionaTransform, fionaTexture.get());
     addObject(toiletModel.get(), phongTexturedShader.get(), toiletTransform, toiletTexture.get());
     
-    std::cout << "Edit mode initialized: CREATION (Press M to switch to deletion mode)" << std::endl;
+    std::cout << "Initial mode is CREATION (Press M to switch modes)!" << std::endl;
 }
 
-glm::vec3 MultiShaderForestScene::unprojectMouseToWorld(double xpos, double ypos, int fbW, int fbH) {
+glm::vec3 MultiShaderForestScene::mouseToWorld(double xpos, double ypos, int W, int H) {
     if (!attachedCamera) return glm::vec3(0.0f);
-
     float winX = static_cast<float>(xpos);
-    float winY = static_cast<float>(fbH - ypos);
-
-    glm::vec4 viewport(0.0f, 0.0f, static_cast<float>(fbW), static_cast<float>(fbH));
-    glm::mat4 view = attachedCamera->getViewMatrix();
-    glm::mat4 proj = attachedCamera->getProjectionMatrix();
-
+    float winY = static_cast<float>(H - ypos);
+    glm::vec4 viewport(0, 0, W, H);
+    glm::mat4 view = attachedCamera->getViewMat();
+    glm::mat4 proj = attachedCamera->getProjMat();
     glm::vec3 nearP = glm::unProject({winX, winY, 0.0f}, view, proj, viewport);
     glm::vec3 farP  = glm::unProject({winX, winY, 1.0f}, view, proj, viewport);
 
     glm::vec3 dir = glm::normalize(farP - nearP);
     float t = (-1.0f - nearP.y) / dir.y;
-    //std::cout << "near " << nearP.x << " " << nearP.y << " " << nearP.z << std::endl;
 
     return nearP + dir * t;
 }
 
 
-int MultiShaderForestScene::findShroomAtPosition(const glm::vec3& worldPos) {
+int MultiShaderForestScene::findShroomAtPos(const glm::vec3& worldPos) {
     const float SELECTION_RADIUS = 1.0f;
-    
-    for (size_t i = 0; i < shroomObjects.size(); ++i) {
+    for (int i = 0; i < shroomObjects.size(); ++i) {
         glm::vec3 diff = worldPos - shroomObjects[i].position;
         float dist = glm::length(glm::vec2(diff.x, diff.z));
         
@@ -266,32 +301,31 @@ int MultiShaderForestScene::findShroomAtPosition(const glm::vec3& worldPos) {
             return static_cast<int>(i);
         }
     }
-    
     return -1;
 }
 
-void MultiShaderForestScene::addShroomAtPosition(const glm::vec3& worldPos) {
+void MultiShaderForestScene::addShroomAtPos(const glm::vec3& worldPos) {
     auto shroomTransform = std::make_shared<TransformComposite>();
     shroomTransform->add(std::make_shared<TransformTranslation>(glm::vec3(2.0f, 0.0f, 0.0f)));
     shroomTransform->add(std::make_shared<TransformTranslation>(worldPos));
     shroomTransform->add(std::make_shared<TransformScale>(glm::vec3(0.05f)));
     
-    size_t objIndex = objects.size();
+    int objIndex = objects.size();
     addObject(shroomModel.get(), phongTexturedShader.get(), shroomTransform, shroomTexture.get());
     shroomObjects.push_back({objIndex, worldPos});
     
     std::cout << "Added shroom at (" << worldPos.x << ", " << worldPos.y << ", " << worldPos.z << ")" << std::endl;
 }
 
-void MultiShaderForestScene::deleteShroomAtPosition(const glm::vec3& worldPos) {
-    int shroomIndex = findShroomAtPosition(worldPos);
+void MultiShaderForestScene::deleteShroomAtPos(const glm::vec3& worldPos) {
+    int shroomIndex = findShroomAtPos(worldPos);
     if (shroomIndex >= 0) {
-        size_t objIndex = shroomObjects[shroomIndex].objectIndex;
-        
+        int objIndex = shroomObjects[shroomIndex].objectIndex;
+
         if (objIndex < objects.size()) {
             objects.erase(objects.begin() + objIndex);
             
-            for (size_t i = 0; i < shroomObjects.size(); ++i) {
+            for (int i = 0; i < shroomObjects.size(); ++i) {
                 if (shroomObjects[i].objectIndex > objIndex) {
                     shroomObjects[i].objectIndex--;
                 }
@@ -302,6 +336,10 @@ void MultiShaderForestScene::deleteShroomAtPosition(const glm::vec3& worldPos) {
                     ls.objectIndex--;
                 }
             }
+            
+            if (shrekObjectIndex > objIndex) {
+                shrekObjectIndex--;
+            }
         }
         
         shroomObjects.erase(shroomObjects.begin() + shroomIndex);
@@ -310,36 +348,39 @@ void MultiShaderForestScene::deleteShroomAtPosition(const glm::vec3& worldPos) {
 }
 
 void MultiShaderForestScene::handleMouseClick(double xpos, double ypos, int width, int height) {
-    glm::vec3 worldPos = unprojectMouseToWorld(xpos, ypos, width, height);
-    
-    if (editMode) {
-        addShroomAtPosition(worldPos);
-    } else {
-        deleteShroomAtPosition(worldPos);
+    glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
+    switch(editMode) {
+        case EditMode::CREATION:
+            addShroomAtPos(worldPos);
+            break;
+        case EditMode::DELETION:
+            deleteShroomAtPos(worldPos);
+            break;
+        case EditMode::BEZIER_EDIT:
+            addBezierPoint(worldPos);
+            break;
     }
 }
 
 void MultiShaderForestScene::updateMouseHover(double xpos, double ypos, int width, int height) {
-    glm::vec3 worldPos = unprojectMouseToWorld(xpos, ypos, width, height);
-    hoveredShroomIndex = findShroomAtPosition(worldPos);
+    glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
+    hoveredShroomIndex = findShroomAtPos(worldPos);
 }
 
-void MultiShaderForestScene::drawShroomsWithStencil() {
+void MultiShaderForestScene::drawShroomsWStencil() {
     if (hoveredShroomIndex < 0 || hoveredShroomIndex >= static_cast<int>(shroomObjects.size())) {
         return;
     }
     
     glEnable(GL_STENCIL_TEST);
-    
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilMask(0xFF);
     glClear(GL_STENCIL_BUFFER_BIT);
     
-    size_t objIndex = shroomObjects[hoveredShroomIndex].objectIndex;
+    int objIndex = shroomObjects[hoveredShroomIndex].objectIndex;
     auto& obj = objects[objIndex];
     obj.shader->use();
-    
     if (obj.texture) {
         obj.texture->bind(0);
         obj.shader->SetUniform("textureSampler", 0);
@@ -348,7 +389,6 @@ void MultiShaderForestScene::drawShroomsWithStencil() {
     glm::mat4 model = obj.transform->getMatrix();
     obj.shader->SetUniform("model", model);
     obj.model->draw(GL_TRIANGLES);
-    
     if (obj.texture) {
         obj.texture->unbind();
     }
@@ -356,20 +396,6 @@ void MultiShaderForestScene::drawShroomsWithStencil() {
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
-    
-    stencilShader->use();
-    auto outlineTransform = std::make_shared<TransformComposite>();
-    outlineTransform->add(std::make_shared<TransformTranslation>(shroomObjects[hoveredShroomIndex].position));
-    outlineTransform->add(std::make_shared<TransformScale>(glm::vec3(0.13f)));
-    
-    glm::mat4 outlineModel = outlineTransform->getMatrix();
-    stencilShader->SetUniform("model", outlineModel);
-    
-    if (editMode) {
-        stencilShader->SetUniform("outlineColor", glm::vec3(0.0f, 1.0f, 0.0f));
-    } else {
-        stencilShader->SetUniform("outlineColor", glm::vec3(1.0f, 0.0f, 0.0f));
-    }
     
     obj.model->draw(GL_TRIANGLES);
     
@@ -383,36 +409,21 @@ void MultiShaderForestScene::drawShroomsWithStencil() {
 
 void MultiShaderForestScene::draw() {
     float time = static_cast<float>(glfwGetTime());
+    if (shrekBezierTrans) {
+        float t = fmod(time * bezierAnimSpeed, 1.0f);
+        shrekBezierTrans->setParam(t);
+    }
     
-    lights[0]->setPosition(glm::vec3(
-        5.0f * cos(time * 0.5f),
-        3.0f + 1.0f * sin(time * 0.7f),
-        5.0f * sin(time * 0.5f)
-    ));
-    
-    lights[1]->setPosition(glm::vec3(
-        -5.0f * cos(time * 0.3f),
-        3.0f + 1.5f * sin(time * 0.5f),
-        -5.0f * sin(time * 0.3f)
-    ));
-    
-    lights[2]->setPosition(glm::vec3(
-        8.0f * sin(time * 0.4f),
-        5.0f + 2.0f * sin(time * 0.6f),
-        8.0f * cos(time * 0.4f)
-    ));
-    
-    lights[3]->setPosition(glm::vec3(
-        -8.0f * sin(time * 0.25f),
-        2.0f + 1.0f * cos(time * 0.8f),
-        8.0f * cos(time * 0.25f)
-    ));
-    
-    for (auto& ls : lightSpheres) {
-        auto sphereTransform = std::make_shared<TransformComposite>();
-        sphereTransform->add(std::make_shared<TransformTranslation>(ls.light->getPosition()));
-        sphereTransform->add(std::make_shared<TransformScale>(glm::vec3(0.1f)));
-        objects[ls.objectIndex].transform = sphereTransform;
+    for (int i = 0; i < fireflyRotations.size(); ++i) {
+        float speed = 0.5f + i * 0.2f; 
+        float angle = time * speed * 50.0f;
+        
+        fireflyRotations[i]->setAngle(angle);
+        
+        // change ONLY light positions for shaders to follow the moving balls
+        glm::mat4 transform = objects[lightSpheres[i].objectIndex].transform->getMatrix();
+        glm::vec3 pos = glm::vec3(transform[3]);
+        lights[i]->setPosition(pos);
     }
     
     if (attachedCamera) {
@@ -450,9 +461,9 @@ void MultiShaderForestScene::draw() {
     
     glUseProgram(0);
     
-    for (size_t i = 0; i < objects.size(); ++i) {
+    for (int i = 0; i < objects.size(); ++i) {
         bool isLightSphere = false;
-        for (size_t j = 0; j < lightSpheres.size(); ++j) {
+        for (int j = 0; j < lightSpheres.size(); ++j) {
             if (i == lightSpheres[j].objectIndex) {
                 isLightSphere = true;
                 break;
@@ -485,17 +496,19 @@ void MultiShaderForestScene::draw() {
         }
     }
     
-    drawShroomsWithStencil();
+    drawShroomsWStencil();
     
+    // FIREFLIES HERE
     phongShader->use();
     phongShader->SetUniform("objectColor", glm::vec3(2.0f, 2.0f, 0.0f));
     phongShader->SetUniform("shininess", 128.0f);
-    
-    for (size_t i = 0; i < lightSpheres.size(); ++i) {
+    for (int i = 0; i < lightSpheres.size(); ++i) {
         auto& obj = objects[lightSpheres[i].objectIndex];
         glm::mat4 model = obj.transform->getMatrix();
+        phongShader->SetUniform("isFirefly", true);
         phongShader->SetUniform("model", model);
         obj.model->draw(GL_TRIANGLES);
+        phongShader->SetUniform("isFirefly", false);
     }
     glUseProgram(0);
 }
@@ -506,4 +519,29 @@ void MultiShaderForestScene::attachToCamera(Camera* camera) {
 
 void MultiShaderForestScene::detachFromCamera(Camera* camera) {
     detachFromCameraImpl(camera);
+}
+
+void MultiShaderForestScene::addBezierPoint(const glm::vec3& worldPos) {
+    bezierControlPoints.push_back(worldPos);
+    std::cout << "Added Bezier point #" << bezierControlPoints.size() 
+    << " at (" << worldPos.x << ", " << worldPos.y << ", " << worldPos.z << ")" << std::endl;
+    
+    if (bezierControlPoints.size() >= 4) {
+        updateBezierPath();
+    } else {
+        std::cout << "Add atleast 4 pts (currently: " << bezierControlPoints.size() << ")" << std::endl;
+    }
+}
+
+void MultiShaderForestScene::updateBezierPath() {
+    if (bezierControlPoints.size() < 4) {
+        return;
+    }
+
+    shrekBezierTrans = std::make_shared<TransformBezier>(bezierControlPoints, 0.0f);
+    auto shrekTransform = std::make_shared<TransformComposite>();
+    shrekTransform->add(shrekBezierTrans);
+    objects[shrekObjectIndex].transform = shrekTransform;
+    
+    std::cout << "Bezier path updated with pts..." << std::endl;
 }

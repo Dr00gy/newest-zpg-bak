@@ -8,10 +8,11 @@
 #include <vector>
 #include <memory>
 
-#include "Shader.hpp"
+#include "renderers/Shader.hpp"
 #include "Model.hpp"
 #include "Camera.hpp"
 #include "Controls.hpp"
+
 #include "trans/Transform.hpp"
 
 #include "scenes/BaseScene.hpp"
@@ -35,7 +36,7 @@ public:
 
 private:
     GLFWwindow* window;
-    size_t currentSceneIndex;
+    int currentSceneIdx;
     float deltaTime;
     float lastFrame;
     std::unique_ptr<Camera> camera;

@@ -15,12 +15,19 @@ struct Light {
     float quadratic;
 };
 
+struct Material {
+    float shininess;
+    float ambient;
+    float diffuse;
+    float specular;
+};
+
 #define MAX_LIGHTS 10
 uniform Light lights[MAX_LIGHTS];
 uniform int numLights;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
-uniform float shininess;
+uniform Material material;
 uniform sampler2D textureSampler;
 uniform bool useTexture;
 
@@ -37,14 +44,14 @@ vec3 calcPointLight(Light light, vec3 norm, vec3 viewDir) {
     
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     vec3 specular = vec3(0.0);
     if (diff > 0.0) {
         vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        specular = light.specular * spec * light.color;
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        specular = light.specular * spec * light.color * material.specular;
     }
     
     return (ambient + diffuse + specular) * attenuation;
@@ -55,14 +62,14 @@ vec3 calcDirectionalLight(Light light, vec3 norm, vec3 viewDir) {
     
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     vec3 specular = vec3(0.0);
     if (diff > 0.0) {
         vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        specular = light.specular * spec * light.color;
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        specular = light.specular * spec * light.color * material.specular;
     }
     
     return ambient + diffuse + specular;
@@ -75,7 +82,7 @@ vec3 calcReflLight(Light light, vec3 norm, vec3 viewDir) {
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     
     if (theta < light.outerCutOff) {
-        return light.ambient * light.color * intensity;
+        return light.ambient * light.color * material.ambient * intensity;
     }
     
     float distance = length(light.position - FragPos);
@@ -83,14 +90,14 @@ vec3 calcReflLight(Light light, vec3 norm, vec3 viewDir) {
     
     float diff = max(dot(norm, lightDir), 0.0);
     
-    vec3 ambient = light.ambient * light.color;
-    vec3 diffuse = light.diffuse * diff * light.color;
+    vec3 ambient = light.ambient * light.color * material.ambient;
+    vec3 diffuse = light.diffuse * diff * light.color * material.diffuse;
     
     vec3 specular = vec3(0.0);
     if (diff > 0.0) {
         vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        specular = light.specular * spec * light.color;
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        specular = light.specular * spec * light.color * material.specular;
     }
     
     return (ambient + diffuse + specular) * attenuation * intensity;
@@ -102,7 +109,7 @@ void main() {
     
     vec3 result = vec3(0.0);
     if (numLights == 0) {
-        result = vec3(0.3);
+        result = vec3(0.3) * material.ambient;
     } else {
         for (int i = 0; i < numLights && i < MAX_LIGHTS; i++) {
             if (lights[i].type == 0) {
@@ -125,22 +132,3 @@ void main() {
     
     fragColor = vec4(finalColor, 1.0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-//#version 330 core
-//in vec2 TexCoords;
-//out vec4 FragColor;
-
-//void main() {
-    //FragColor = vec4(TexCoords, 0.0, 1.0);
-//}

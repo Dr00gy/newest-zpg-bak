@@ -13,8 +13,8 @@ enum class LightType {
 
 class Light : public Subject {
 public:
-    Light(const glm::vec3& positionOrDirection, const glm::vec3& color = glm::vec3(1.0f), LightType type = LightType::POINT)
-        : position(positionOrDirection), direction(glm::normalize(positionOrDirection)), color(color), type(type),
+    Light(const glm::vec3& posOrDir, const glm::vec3& color = glm::vec3(1.0f), LightType type = LightType::POINT)
+        : position(posOrDir), direction(glm::normalize(posOrDir)), color(color), type(type),
           ambient(0.2f), diffuse(0.8f), specular(1.0f),
           cutOff(12.5f), outerCutOff(17.5f), constant(1.0f), linear(0.09f), quadratic(0.032f) {}
     

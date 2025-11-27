@@ -1,9 +1,7 @@
 #include "Model.hpp"
-
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-
 #include <iostream>
 #include <vector>
 
@@ -41,7 +39,6 @@ static inline void bindAttributes(ModelType type, GLuint VAO, GLuint VBO, int st
         glBindVertexArray(0);
         return;
     }
-
     glBindVertexArray(0);
 }
 
@@ -79,7 +76,6 @@ Model::Model(float* vertices, size_t size, int stride, ModelType type)
     : type(type)
 {
     vertexCount = size / (stride * sizeof(float));
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -90,7 +86,6 @@ Model::Model(float* vertices, size_t size, int stride, ModelType type)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     bindAttributes(type, VAO, VBO, stride);
-
     glBindVertexArray(0);
 }
 
@@ -128,7 +123,6 @@ std::unique_ptr<Model> Model::LoadFromFile(const std::string& path, ModelType ty
     aiMesh* mesh = scene->mMeshes[0];
     std::vector<float> data;
     data.reserve(mesh->mNumFaces * 3 * 8);
-
     extractMeshData(mesh, data);
 
     if (data.empty()) {

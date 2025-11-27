@@ -2,8 +2,8 @@
 #include <GLFW/glfw3.h>
 
 void RotatingTriangleScene::init() {
-    std::string vertexSrc = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragTriangleSrc = loadShaderSource("src/shaders/frag_triangle.glsl");
+    std::string vertexSrc = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string fragTriangleSrc = loadShaderSrc("src/shaders/frag_triangle.glsl");
     
     shader = std::make_unique<Shader>(vertexSrc.c_str(), fragTriangleSrc.c_str());
 
@@ -23,7 +23,6 @@ void RotatingTriangleScene::init() {
 
 void RotatingTriangleScene::draw() {
     float time = static_cast<float>(glfwGetTime());
-    
     auto rotation = std::make_shared<TransformRotation>(time * 50.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     
     transform = std::make_shared<TransformComposite>();

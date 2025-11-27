@@ -13,12 +13,12 @@ find_package(GLEW REQUIRED)
 add_executable(kms
     src/Main.cpp
     src/App.cpp
-    src/Shader.cpp
     src/Model.cpp
     src/Camera.cpp
     src/Controls.cpp
-    src/Subject.cpp
-    src/Texture.cpp
+    src/renderers/Shader.cpp
+    src/renderers/Subject.cpp
+    src/renderers/Texture.cpp
     src/scenes/RandomObjectsScene.cpp
     src/scenes/RotatingTriangleScene.cpp
     src/scenes/SymmetricalBallsScene.cpp

@@ -4,10 +4,10 @@
 #include <sstream>
 #include <iostream>
 
-inline std::string loadShaderSource(const std::string& path) {
+inline std::string loadShaderSrc(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
-        std::cerr << "Failed to open shader file: " << path << "\n";
+        std::cerr << "Failed to open shader file!!! " << path << "\n";
         return "";
     }
     std::stringstream buffer;

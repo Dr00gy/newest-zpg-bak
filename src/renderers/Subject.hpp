@@ -10,7 +10,6 @@ public:
         VIEW,
         PROJECTION
     };
-
     virtual ~Subject() = default;
     
     void attach(Observer* observer) {
@@ -25,7 +24,6 @@ public:
     }
     
     void notify();
-    
     ChangeType getLastChangeType() const { return lastChangeType; }
     
 protected:

@@ -1,8 +1,4 @@
 #version 330 core
-out vec4 fragColor;
-
-in vec3 FragPos;
-in vec3 Normal;
 
 struct Light {
     vec3 position;
@@ -25,6 +21,11 @@ uniform int numLights;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
 uniform float shininess;
+
+in vec3 FragPos;
+in vec3 Normal;
+
+out vec4 fragColor;
 
 vec3 calcPointLight(Light light, vec3 norm, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - FragPos);

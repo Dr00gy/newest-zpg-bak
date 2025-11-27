@@ -11,15 +11,15 @@ public:
     Controls(GLFWwindow* window, Camera* camera);
     
     void setupCallbacks();
-    void processInput(float deltaTime);
-    void processSceneSwitching(size_t& currentSceneIndex, size_t sceneCount);
-    void processFlashlightToggle(MultiShaderForestScene* forestScene);
-    void processSkyboxToggle(ModelScene* modelScene);
-    void processEditModeToggle(MultiShaderForestScene* forestScene);
-    void processWhackAMoleInput(WhackAMoleScene* whackAMoleScene);
-    void processMouseHover(MultiShaderForestScene* forestScene);
+    void procInput(float deltaTime);
+    void procSceneSwitch(int& currentSceneIdx, int sceneCount);
+    void procBatteryToggle(MultiShaderForestScene* forestScene);
+    void procSkyboxToggle(ModelScene* modelScene);
+    void procEditModeToggle(MultiShaderForestScene* forestScene);
+    void procWhackAMoleInput(WhackAMoleScene* whackAMoleScene);
+    void procMouseHover(MultiShaderForestScene* forestScene);
     bool shouldClose() const;
-
+    
     Camera* getCamera() const { return camera; }
 
 private:
@@ -29,13 +29,13 @@ private:
     float lastY;
     bool firstMouse;
     bool tabPressed;
-    bool rightMousePressed;
-    bool leftMousePressed;
+    bool rMousePressed;
+    bool lMousePressed;
     bool fPressed;
     bool tPressed;
     bool mPressed;
     
-    void processCameraInput(float deltaTime);
+    void procCameraInput(float deltaTime);
     static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

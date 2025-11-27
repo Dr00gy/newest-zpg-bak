@@ -7,10 +7,10 @@
 void RandomObjectsScene::init() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    std::string vertexSrc        = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragTriangleSrc  = loadShaderSource("src/shaders/frag_triangle.glsl");
-    std::string fragRectangleSrc = loadShaderSource("src/shaders/frag_rectangle.glsl");
-    std::string fragGreenSrc     = loadShaderSource("src/shaders/frag_green.glsl");
+    std::string vertexSrc        = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string fragTriangleSrc  = loadShaderSrc("src/shaders/frag_triangle.glsl");
+    std::string fragRectangleSrc = loadShaderSrc("src/shaders/frag_rectangle.glsl");
+    std::string fragGreenSrc     = loadShaderSrc("src/shaders/frag_green.glsl");
 
     shader1 = std::make_unique<Shader>(vertexSrc.c_str(), fragTriangleSrc.c_str());
     shader2 = std::make_unique<Shader>(vertexSrc.c_str(), fragRectangleSrc.c_str());

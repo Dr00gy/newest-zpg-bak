@@ -5,7 +5,6 @@
 class RandomObjectsScene : public BaseScene {
 public:
     RandomObjectsScene() = default;
-
     void init() override;
     void draw() override;
     void attachToCamera(Camera* camera) override;

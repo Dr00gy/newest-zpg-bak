@@ -17,6 +17,8 @@ public:
         return result;
     }
 
+    const std::vector<std::shared_ptr<Transform>>& getParts() const { return transforms; }
+
 private:
     std::vector<std::shared_ptr<Transform>> transforms;
 };

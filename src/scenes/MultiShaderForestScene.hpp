@@ -5,22 +5,45 @@
 
 class MultiShaderForestScene : public BaseScene {
 public:
-    MultiShaderForestScene() = default;
+    enum class EditMode {
+        CREATION,
+        DELETION,
+        BEZIER_EDIT
+    };
 
+    MultiShaderForestScene() = default;
     void init() override;
     void draw() override;
     void attachToCamera(Camera* camera) override;
     void detachFromCamera(Camera* camera) override;
     void toggleFlashlight() { flashlightEnabled = !flashlightEnabled; }
     void toggleEditMode() { 
-        editMode = !editMode; 
-        std::cout << "Edit mode switched to: " << (editMode ? "CREATION" : "DELETION") << std::endl;
+        editMode = static_cast<EditMode>((static_cast<int>(editMode) + 1) % 3);
+        switch(editMode) {
+            case EditMode::CREATION:
+                std::cout << "Mode switched to: SHROOM CREATION" << std::endl;
+                break;
+            case EditMode::DELETION:
+                std::cout << "Mode switched to: SHROOM DELETION" << std::endl;
+                break;
+            case EditMode::BEZIER_EDIT:
+                std::cout << "Mode switched to: BEZIER PATH EDIT" << std::endl;
+                break;
+        }
     }
-    bool isEditMode() const { return editMode; }
+    EditMode getEditMode() const { return editMode; }
+    bool isEditMode() const { return editMode == EditMode::CREATION; }
     void handleMouseClick(double xpos, double ypos, int width, int height);
     void updateMouseHover(double xpos, double ypos, int width, int height);
+    void resetBezierPath();
 
 private:
+    std::unique_ptr<Shader> lambertShader;
+    std::unique_ptr<Shader> phongShader;
+    std::unique_ptr<Shader> blinnShader;
+    std::unique_ptr<Shader> phongTexturedShader;
+    std::unique_ptr<Shader> triangleShader;
+
     std::unique_ptr<Model> bushModel;
     std::unique_ptr<Model> treeModel;
     std::unique_ptr<Model> plainModel;
@@ -29,13 +52,6 @@ private:
     std::unique_ptr<Model> fionaModel;
     std::unique_ptr<Model> toiletModel;
     std::unique_ptr<Model> shroomModel;
-    
-    std::unique_ptr<Shader> lambertShader;
-    std::unique_ptr<Shader> phongShader;
-    std::unique_ptr<Shader> blinnShader;
-    std::unique_ptr<Shader> phongTexturedShader;
-    std::unique_ptr<Shader> triangleShader;
-    std::unique_ptr<Shader> stencilShader;
     
     std::unique_ptr<Texture> grassTexture;
     std::unique_ptr<Texture> shrekTexture;
@@ -52,20 +68,28 @@ private:
         size_t objectIndex;
     };
     std::vector<LightSphere> lightSpheres;
+    std::vector<std::shared_ptr<TransformRotation>> fireflyRotations;
     
     struct ShroomObject {
-        size_t objectIndex;
+        int objectIndex;
         glm::vec3 position;
     };
     std::vector<ShroomObject> shroomObjects;
     
     bool flashlightEnabled = true;
-    bool editMode = true;
+    EditMode editMode = EditMode::CREATION;
     int hoveredShroomIndex = -1;
     
-    glm::vec3 unprojectMouseToWorld(double xpos, double ypos, int width, int height);
-    int findShroomAtPosition(const glm::vec3& worldPos);
-    void drawShroomsWithStencil();
-    void addShroomAtPosition(const glm::vec3& worldPos);
-    void deleteShroomAtPosition(const glm::vec3& worldPos);
+    std::shared_ptr<TransformBezier> shrekBezierTrans;
+    int shrekObjectIndex;
+    float bezierAnimSpeed = 0.15f;
+    std::vector<glm::vec3> bezierControlPoints;
+    
+    glm::vec3 mouseToWorld(double xpos, double ypos, int width, int height);
+    int findShroomAtPos(const glm::vec3& worldPos);
+    void drawShroomsWStencil();
+    void addShroomAtPos(const glm::vec3& worldPos);
+    void deleteShroomAtPos(const glm::vec3& worldPos);
+    void addBezierPoint(const glm::vec3& worldPos);
+    void updateBezierPath();
 };

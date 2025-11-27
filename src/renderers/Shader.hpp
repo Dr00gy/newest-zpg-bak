@@ -28,16 +28,14 @@ public:
     void addLight(Light* light) { 
         lights.push_back(light); 
     }
-    
     void updateAllLights();
-    
     void setAutoUpdateCamera(bool value) { autoUpdateCamera = value; }
     void setAutoUpdateLight(bool value) { autoUpdateLight = value; }
 
 private:
     GLuint programID;
-    bool checkCompileErrors(GLuint shader, std::string type);
     bool autoUpdateCamera = true;
     bool autoUpdateLight = true;
     std::vector<Light*> lights;
+    bool checkCompileErrors(GLuint shader, std::string type);
 };

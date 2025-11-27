@@ -1,9 +1,9 @@
 #pragma once
-#include "Subject.hpp"
+#include "renderers/Subject.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-enum class CameraMovement {
+enum class CameraMov {
     FORWARD,
     BACKWARD,
     LEFT,
@@ -25,22 +25,19 @@ public:
            float yaw = -90.0f,
            float pitch = 0.0f);
     
-    Camera(float posX, float posY, float posZ,
-           float upX, float upY, float upZ,
-           float yaw, float pitch);
-    
-    glm::mat4 getViewMatrix() const;
-    glm::mat4 getProjectionMatrix() const;
+    glm::mat4 getViewMat() const;
+    glm::mat4 getProjMat() const;
     glm::vec3 getPosition() const { return position; }
     glm::vec3 getFront() const { return front; }
     glm::ivec2 getResolution() const { return resolution; }
     float getAspectRatio() const { return aspectRatio; }
-    void processKeyboard(CameraMovement direction, float deltaTime);
-    void processMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
-    void processMouseScroll(float yoffset);
+    //
+    void procKeyboard(CameraMov direction, float deltaTime);
+    void procMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
+    void procMouseScroll(float yoffset);
     void updateAspectRatio(float width, float height);
-
-        void setPosition(const glm::vec3& pos) {
+    //
+    void setPosition(const glm::vec3& pos) {
         position = pos;
         lastChangeType = ChangeType::VIEW;
         notify();
@@ -50,35 +47,34 @@ public:
         pitch = p;
         if (pitch > 89.0f) pitch = 89.0f;
         if (pitch < -89.0f) pitch = -89.0f;
-        updateCameraVectors();
+        updateCameraVecs();
         lastChangeType = ChangeType::VIEW;
         notify();
     }
     
     void setYaw(float y) {
         yaw = y;
-        updateCameraVectors();
+        updateCameraVecs();
         lastChangeType = ChangeType::VIEW;
         notify();
     }
 
 private:
-    void updateCameraVectors();
-    
     glm::vec3 position;
     glm::vec3 front;
     glm::vec3 up;
     glm::vec3 right;
     glm::vec3 worldUp;
-
     glm::ivec2 resolution;
     
     float yaw;
     float pitch;
-    float movementSpeed;
+    float movSpeed;
     float mouseSensitivity;
     float fov;
     float aspectRatio;
     float nearPlane;
     float farPlane;
+
+    void updateCameraVecs();
 };

@@ -8,17 +8,17 @@ WhackAMoleScene::WhackAMoleScene()
       enemiesSpawned(0),
       gameTime(0.0f),
       nextSpawnTime(1.0f),
-      hoveredEnemyIndex(-1),
+      hoveredEnemyIdx(-1),
       rng(std::random_device{}()),
-      holeDistribution(0, 5),
-      enemyTypeDistribution(0, 2),
-      spawnDelayDistribution(0.5f, 2.0f),
-      moveChanceDistribution(0.0f, 1.0f) {}
+      holeDistrib(0, 5),
+      enemyTypeDistrib(0, 2),
+      spawnDelayDistrib(0.5f, 2.0f),
+      moveChanceDistrib(0.0f, 1.0f) {}
 
 void WhackAMoleScene::init() {
-    std::string vertexTexturedSrc = loadShaderSource("src/shaders/vertex_textured.glsl");
-    std::string fragPhongTexturedSrc = loadShaderSource("src/shaders/mult_phong_textured.glsl");
-    std::string fragStencilSrc = loadShaderSource("src/shaders/stencil.glsl");
+    std::string vertexTexturedSrc = loadShaderSrc("src/shaders/vertex_textured.glsl");
+    std::string fragPhongTexturedSrc = loadShaderSrc("src/shaders/mult_phong_textured.glsl");
+    std::string fragStencilSrc = loadShaderSrc("src/shaders/stencil.glsl");
 
     phongTexturedShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedSrc.c_str());
     stencilShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragStencilSrc.c_str());
@@ -48,13 +48,10 @@ void WhackAMoleScene::init() {
     
     phongTexturedShader->addLight(light1.get());
     phongTexturedShader->addLight(light2.get());
-    
     light1->attach(phongTexturedShader.get());
     light2->attach(phongTexturedShader.get());
-    
     lights.push_back(std::move(light1));
     lights.push_back(std::move(light2));
-    
     phongTexturedShader->updateAllLights();
 
     auto plainTransform = std::make_shared<TransformComposite>();
@@ -83,7 +80,7 @@ void WhackAMoleScene::initializeHoles() {
             cupTransform->add(std::make_shared<TransformRotation>(-180.0f, glm::vec3(0,1,0)));
             cupTransform->add(std::make_shared<TransformScale>(glm::vec3(0.5f)));
 
-            size_t cupIndex = objects.size();
+            int cupIndex = objects.size();
             addObject(cupModel.get(), phongTexturedShader.get(), cupTransform, nullptr);
 
             holes.push_back({pos, cupIndex, -1});
@@ -96,14 +93,13 @@ void WhackAMoleScene::spawnEnemy() {
 
     std::vector<int> freeHoles;
     for (int i = 0; i < holes.size(); i++)
-        if (holes[i].activeEnemyIndex == -1)
+        if (holes[i].activeEnemyIdx == -1)
             freeHoles.push_back(i);
 
     if (freeHoles.empty()) return;
+    int holeIdx = freeHoles[holeDistrib(rng) % freeHoles.size()];
 
-    int holeIdx = freeHoles[holeDistribution(rng) % freeHoles.size()];
-
-    EnemyType type = static_cast<EnemyType>(enemyTypeDistribution(rng));
+    EnemyType type = static_cast<EnemyType>(enemyTypeDistrib(rng));
     Model* enemyModel = nullptr;
     Texture* enemyTexture = nullptr;
     float scaleValue = 1.0f;
@@ -128,32 +124,30 @@ void WhackAMoleScene::spawnEnemy() {
     pos.z += 1.0f;
 
     auto t = std::make_shared<TransformComposite>();
-    if (type == EnemyType::MUSHROOM)
-    t->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
+    if (type == EnemyType::MUSHROOM) t->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
     t->add(std::make_shared<TransformTranslation>(pos));
     t->add(std::make_shared<TransformScale>(glm::vec3(scaleValue)));
 
-    size_t objIndex = objects.size();
+    int objIndex = objects.size();
     addObject(enemyModel, phongTexturedShader.get(), t, enemyTexture);
 
     int idx = enemies.size();
-    enemies.push_back({type, objIndex, pos, gameTime, true, false, 0, false, false,
-                       pos, pos, 0, MOVE_DURATION});
-    holes[holeIdx].activeEnemyIndex = idx;
+    auto moveTransform = std::make_shared<TransformLinear>(pos, pos, 0.0f);
+    
+    enemies.push_back({type, objIndex, pos, gameTime, true, false, 0, false, false, moveTransform, 0, MOVE_DURATION});
+    holes[holeIdx].activeEnemyIdx = idx;
     enemiesSpawned++;
 }
 
-void WhackAMoleScene::tryMoveEnemy(size_t i) {
+void WhackAMoleScene::tryMoveEnemy(int i) {
     Enemy& e = enemies[i];
     if (!e.isAlive || e.isSquished || e.hasMoved || e.isMoving) return;
-
-    if (moveChanceDistribution(rng) > 0.1f) return;
+    if (moveChanceDistrib(rng) > 0.1f) return;
 
     int fromHole = -1;
     for (int h = 0; h < holes.size(); h++)
-        if (holes[h].activeEnemyIndex == i)
+        if (holes[h].activeEnemyIdx == i)
             fromHole = h;
-
     if (fromHole == -1) return;
 
     std::vector<int> adjacentHoles;
@@ -167,37 +161,39 @@ void WhackAMoleScene::tryMoveEnemy(size_t i) {
 
     std::vector<int> freeAdjacent;
     for (int adj : adjacentHoles)
-        if (holes[adj].activeEnemyIndex == -1)
+        if (holes[adj].activeEnemyIdx == -1)
             freeAdjacent.push_back(adj);
-
     if (freeAdjacent.empty()) return;
 
     int toHole = freeAdjacent[std::uniform_int_distribution<>(0, freeAdjacent.size() - 1)(rng)];
     startEnemyMov(i, fromHole, toHole);
 }
 
-void WhackAMoleScene::startEnemyMov(size_t idx, int fromHole, int toHole) {
+void WhackAMoleScene::startEnemyMov(int idx, int fromHole, int toHole) {
     Enemy& e = enemies[idx];
     e.hasMoved = true;
     e.isMoving = true;
 
-    holes[fromHole].activeEnemyIndex = -1;
-    holes[toHole].activeEnemyIndex = idx;
+    holes[fromHole].activeEnemyIdx = -1;
+    holes[toHole].activeEnemyIdx = idx;
 
-    e.moveStartPos = e.position;
+    glm::vec3 startPos = e.position;
     glm::vec3 dest = holes[toHole].position;
     dest.y += 0.5f;
     dest.x += 3.0f;
     dest.z += 1.0f;
-    e.moveEndPos = dest;
+    
+    e.moveTransform->setStartPoint(startPos);
+    e.moveTransform->setEndPoint(dest);
+    e.moveTransform->setParam(0.0f);
+
     e.moveStartTime = gameTime;
 }
 
 void WhackAMoleScene::updateEnemies(float dt) {
-    for (size_t i = 0; i < enemies.size(); i++) {
+    for (int i = 0; i < enemies.size(); i++) {
         Enemy& e = enemies[i];
         if (!e.isAlive) continue;
-
         if (!e.isSquished && !e.hasMoved)
             tryMoveEnemy(i);
 
@@ -207,12 +203,14 @@ void WhackAMoleScene::updateEnemies(float dt) {
                 t = 1.0f;
                 e.isMoving = false;
             }
-            e.position = glm::mix(e.moveStartPos, e.moveEndPos, t);
+            e.moveTransform->setParam(t);
+            e.position = e.moveTransform->getPositionOnPath();
 
             auto tr = std::make_shared<TransformComposite>();
             if (e.type == EnemyType::MUSHROOM)
-            tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
-            tr->add(std::make_shared<TransformTranslation>(e.position));
+                tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
+            
+            tr->add(e.moveTransform);
 
             float scale = (e.type == EnemyType::MUSHROOM ? 0.05f : 2.0f);
             tr->add(std::make_shared<TransformScale>(glm::vec3(scale)));
@@ -227,14 +225,14 @@ void WhackAMoleScene::updateEnemies(float dt) {
             if (p >= 1.0f) {
                 e.isAlive = false;
                 for (auto& h : holes)
-                    if (h.activeEnemyIndex == i)
-                        h.activeEnemyIndex = -1;
+                    if (h.activeEnemyIdx == i)
+                        h.activeEnemyIdx = -1;
             } else {
                 float scale = (e.type == EnemyType::MUSHROOM ? 0.05f : 2.0f);
                 float ys = 1.0f - 0.8f * p;
                 auto tr = std::make_shared<TransformComposite>();
                 if (e.type == EnemyType::MUSHROOM)
-                tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
+                    tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
                 tr->add(std::make_shared<TransformTranslation>(e.position));
                 tr->add(std::make_shared<TransformScale>(glm::vec3(scale, scale * ys, scale)));
                 objects[e.objectIndex].transform = tr;
@@ -242,8 +240,8 @@ void WhackAMoleScene::updateEnemies(float dt) {
         } else if (alive >= ENEMY_LIFETIME) {
             e.isAlive = false;
             for (auto& h : holes)
-                if (h.activeEnemyIndex == i)
-                    h.activeEnemyIndex = -1;
+                if (h.activeEnemyIdx == i)
+                    h.activeEnemyIdx = -1;
         }
     }
 }
@@ -252,13 +250,13 @@ void WhackAMoleScene::updateHammers(float dt) {
     for (auto it = activeHammers.begin(); it != activeHammers.end();) {
         float age = gameTime - it->spawnTime;
         if (age >= HAMMER_LIFETIME) {
-            size_t idx = it->objectIndex;
+            int idx = it->objectIndex;
             if (idx < objects.size()) {
                 objects.erase(objects.begin() + idx);
                 for (auto& e : enemies)
                     if (e.objectIndex > idx) e.objectIndex--;
                 for (auto& h : holes)
-                    if (h.cupObjectIndex > idx) h.cupObjectIndex--;
+                    if (h.cupObjIdx > idx) h.cupObjIdx--;
                 for (auto& he : activeHammers)
                     if (he.objectIndex > idx) he.objectIndex--;
             }
@@ -269,13 +267,12 @@ void WhackAMoleScene::updateHammers(float dt) {
 
 void WhackAMoleScene::update(float dt) {
     gameTime += dt;
-
     updateEnemies(dt);
     updateHammers(dt);
 
     if (gameTime >= nextSpawnTime && enemiesSpawned < MAX_ENEMIES) {
         spawnEnemy();
-        nextSpawnTime = gameTime + spawnDelayDistribution(rng);
+        nextSpawnTime = gameTime + spawnDelayDistrib(rng);
     }
 
     if (enemiesSpawned >= MAX_ENEMIES) {
@@ -289,17 +286,19 @@ void WhackAMoleScene::update(float dt) {
     }
 }
 
-glm::vec3 WhackAMoleScene::unprojectMouseToWorld(double xpos, double ypos, int W, int H) {
+glm::vec3 WhackAMoleScene::mouseToWorld(double xpos, double ypos, int W, int H) {
     if (!attachedCamera) return glm::vec3(0);
-    float x = float(xpos);
-    float y = float(H - ypos);
-    glm::vec4 vp(0, 0, W, H);
-    glm::mat4 view = attachedCamera->getViewMatrix();
-    glm::mat4 proj = attachedCamera->getProjectionMatrix();
-    glm::vec3 nearP = glm::unProject({x, y, 0}, view, proj, vp);
-    glm::vec3 farP = glm::unProject({x, y, 1}, view, proj, vp);
+    float x = static_cast<float>(xpos);
+    float y = static_cast<float>(H - ypos);
+    glm::vec4 viewport(0, 0, W, H);
+    glm::mat4 view = attachedCamera->getViewMat();
+    glm::mat4 proj = attachedCamera->getProjMat();
+    glm::vec3 nearP = glm::unProject({x, y, 0}, view, proj, viewport);
+    glm::vec3 farP = glm::unProject({x, y, 1}, view, proj, viewport);
+    
     glm::vec3 dir = glm::normalize(farP - nearP);
     float t = (0.5f - nearP.y) / dir.y;
+    
     return nearP + dir * t;
 }
 
@@ -338,20 +337,20 @@ void WhackAMoleScene::spawnHammer(const glm::vec3& pos) {
     t->add(std::make_shared<TransformTranslation>(glm::vec3(1,3.5f,-0.7f)));
     t->add(std::make_shared<TransformRotation>(-45, glm::vec3(0,0,1)));
     t->add(std::make_shared<TransformScale>(glm::vec3(0.2f)));
-    size_t idx = objects.size();
+    int idx = objects.size();
     addObject(hammerModel.get(), phongTexturedShader.get(), t, hammerTexture.get());
     activeHammers.push_back({idx, gameTime, pos});
 }
 
 void WhackAMoleScene::handleMouseClick(double xpos, double ypos, int W, int H) {
-    glm::vec3 wp = unprojectMouseToWorld(xpos, ypos, W, H);
+    glm::vec3 wp = mouseToWorld(xpos, ypos, W, H);
     int idx = findEnemyAtPos(wp);
     if (idx >= 0) hitEnemy(idx, wp);
 }
 
 void WhackAMoleScene::updateMouseHover(double xpos, double ypos, int W, int H) {
-    glm::vec3 wp = unprojectMouseToWorld(xpos, ypos, W, H);
-    hoveredEnemyIndex = findEnemyAtPos(wp);
+    glm::vec3 wp = mouseToWorld(xpos, ypos, W, H);
+    hoveredEnemyIdx = findEnemyAtPos(wp);
 }
 
 void WhackAMoleScene::draw() {
@@ -361,7 +360,7 @@ void WhackAMoleScene::draw() {
     phongTexturedShader->updateAllLights();
     glUseProgram(0);
 
-    for (size_t i = 0; i < objects.size(); i++) {
+    for (int i = 0; i < objects.size(); i++) {
         bool dead = false;
         for (auto& e : enemies)
             if (i == e.objectIndex && !e.isAlive)

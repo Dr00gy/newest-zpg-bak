@@ -4,11 +4,11 @@
 SymmetricalBallsScene::SymmetricalBallsScene() {}
 
 void SymmetricalBallsScene::init() {
-    std::string vertexSrc = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragSrc   = loadShaderSource("src/shaders/frag_phong_correct.glsl");
+    std::string vertexSrc = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string fragSrc   = loadShaderSrc("src/shaders/frag_phong_correct.glsl");
     shader = std::make_unique<Shader>(vertexSrc.c_str(), fragSrc.c_str());
 
-    sphereModel = ModelFactory::CreatePlainSphere();
+    sphereModel = ModelFactory::CreateSphere();
 
     light = std::make_unique<Light>(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     light->setAmbient(0.3f);

@@ -1,8 +1,4 @@
 #version 330 core
-out vec4 fragColor;
-
-in vec3 FragPos;
-in vec3 Normal;
 
 struct Light {
     vec3 position;
@@ -16,6 +12,11 @@ uniform Light light;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
 uniform float shininess;
+
+in vec3 FragPos;
+in vec3 Normal;
+
+out vec4 fragColor;
 
 void main() {
     vec3 ambient = light.ambient * light.color;

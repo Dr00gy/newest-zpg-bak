@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 #include "Controls.hpp"
 #include "Camera.hpp"
 #include "scenes/MultiShaderForestScene.hpp"
@@ -14,8 +13,8 @@ Controls::Controls(GLFWwindow* window, Camera* camera)
       lastX(400.0f),
       lastY(300.0f),
       tabPressed(false),
-      rightMousePressed(false),
-      leftMousePressed(false),
+      rMousePressed(false),
+      lMousePressed(false),
       fPressed(false),
       tPressed(false),
       mPressed(false) {}
@@ -33,7 +32,7 @@ void Controls::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     Controls* controls = static_cast<Controls*>(glfwGetWindowUserPointer(window));
     if (!controls) return;
     
-    if (!controls->rightMousePressed) {
+    if (!controls->rMousePressed) {
         controls->firstMouse = true;
         return;
     }
@@ -50,13 +49,13 @@ void Controls::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     controls->lastX = static_cast<float>(xpos);
     controls->lastY = static_cast<float>(ypos);
     
-    controls->camera->processMouseMovement(xoffset, yoffset);
+    controls->camera->procMouseMovement(xoffset, yoffset);
 }
 
 void Controls::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     Controls* controls = static_cast<Controls*>(glfwGetWindowUserPointer(window));
     if (controls) {
-        controls->camera->processMouseScroll(static_cast<float>(yoffset));
+        controls->camera->procMouseScroll(static_cast<float>(yoffset));
     }
 }
 
@@ -66,46 +65,46 @@ void Controls::mouseButtonCallback(GLFWwindow* window, int button, int action, i
     
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
-            controls->rightMousePressed = true;
+            controls->rMousePressed = true;
             controls->firstMouse = true;
         } else if (action == GLFW_RELEASE) {
-            controls->rightMousePressed = false;
+            controls->rMousePressed = false;
             controls->firstMouse = true;
         }
     }
     
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
-            controls->leftMousePressed = true;
+            controls->lMousePressed = true;
         } else if (action == GLFW_RELEASE) {
-            controls->leftMousePressed = false;
+            controls->lMousePressed = false;
         }
     }
 }
 
-void Controls::processCameraInput(float deltaTime) {
+void Controls::procCameraInput(float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::FORWARD, deltaTime);
+        camera->procKeyboard(CameraMov::FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::BACKWARD, deltaTime);
+        camera->procKeyboard(CameraMov::BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::LEFT, deltaTime);
+        camera->procKeyboard(CameraMov::LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::RIGHT, deltaTime);
+        camera->procKeyboard(CameraMov::RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::UP, deltaTime);
+        camera->procKeyboard(CameraMov::UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        camera->processKeyboard(CameraMovement::DOWN, deltaTime);
+        camera->procKeyboard(CameraMov::DOWN, deltaTime);
 }
 
-void Controls::processInput(float deltaTime) {
-    processCameraInput(deltaTime);
+void Controls::procInput(float deltaTime) {
+    procCameraInput(deltaTime);
 }
 
-void Controls::processSceneSwitching(size_t& currentSceneIndex, size_t sceneCount) {
+void Controls::procSceneSwitch(int& currentSceneIdx, int sceneCount) {
     if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
         if (!tabPressed) {
-            currentSceneIndex = (currentSceneIndex + 1) % sceneCount;
+            currentSceneIdx = (currentSceneIdx + 1) % sceneCount;
             tabPressed = true;
         }
     } else {
@@ -116,13 +115,13 @@ void Controls::processSceneSwitching(size_t& currentSceneIndex, size_t sceneCoun
         if (glfwGetKey(window, key) == GLFW_PRESS) {
             int index = key - GLFW_KEY_1;
             if (index < static_cast<int>(sceneCount)) {
-                currentSceneIndex = index;
+                currentSceneIdx = index;
             }
         }
     }
 }
 
-void Controls::processFlashlightToggle(MultiShaderForestScene* forestScene) {
+void Controls::procBatteryToggle(MultiShaderForestScene* forestScene) {
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         if (!fPressed) {
             if (forestScene) {
@@ -135,7 +134,7 @@ void Controls::processFlashlightToggle(MultiShaderForestScene* forestScene) {
     }
 }
 
-void Controls::processSkyboxToggle(ModelScene* modelScene) {
+void Controls::procSkyboxToggle(ModelScene* modelScene) {
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         if (!tPressed) {
             if (modelScene) {
@@ -148,7 +147,7 @@ void Controls::processSkyboxToggle(ModelScene* modelScene) {
     }
 }
 
-void Controls::processEditModeToggle(MultiShaderForestScene* forestScene) {
+void Controls::procEditModeToggle(MultiShaderForestScene* forestScene) {
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
         if (!mPressed) {
             if (forestScene) {
@@ -179,7 +178,7 @@ void Controls::processEditModeToggle(MultiShaderForestScene* forestScene) {
     }
 }
 
-void Controls::processMouseHover(MultiShaderForestScene* forestScene) {
+void Controls::procMouseHover(MultiShaderForestScene* forestScene) {
     if (!forestScene) return;
     
     double xpos, ypos;
@@ -195,7 +194,7 @@ bool Controls::shouldClose() const {
     return glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
 }
 
-void Controls::processWhackAMoleInput(WhackAMoleScene* whackAMoleScene) {
+void Controls::procWhackAMoleInput(WhackAMoleScene* whackAMoleScene) {
     if (!whackAMoleScene) return;
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);

@@ -1,5 +1,5 @@
 #include "Shader.hpp"
-#include "Camera.hpp"
+#include "../Camera.hpp"
 #include "Light.hpp"
 
 Shader::Shader(const char* vertexSrc, const char* fragmentSrc) {
@@ -33,14 +33,13 @@ void Shader::use() const {
 
 void Shader::update(Subject* subject) {
     use();
-    
     Camera* camera = dynamic_cast<Camera*>(subject);
     if (camera && autoUpdateCamera) {
-        SetUniform("view", camera->getViewMatrix());
+        SetUniform("view", camera->getViewMat());
         SetUniform("viewPos", camera->getPosition());
         
         if (camera->getLastChangeType() == Subject::ChangeType::PROJECTION) {
-            SetUniform("projection", camera->getProjectionMatrix());
+            SetUniform("projection", camera->getProjMat());
         }
     }
     
@@ -53,10 +52,9 @@ void Shader::update(Subject* subject) {
 
 void Shader::updateAllLights() {
     use();
-    
     int numLights = static_cast<int>(lights.size());
-    
     GLint numLightsLocation = glGetUniformLocation(programID, "numLights");
+    
     if (numLightsLocation != -1) {
         SetUniform("numLights", numLights);
         

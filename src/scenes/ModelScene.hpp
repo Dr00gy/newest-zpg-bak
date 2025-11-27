@@ -1,10 +1,5 @@
 #pragma once
 #include "BaseScene.hpp"
-#include "../ModelFactory.hpp"
-#include "../Light.hpp"
-#include "../Shader.hpp"
-#include "../Model.hpp"
-#include "../Texture.hpp"
 #include <vector>
 #include <memory>
 
@@ -14,9 +9,9 @@ public:
     void draw() override;
     void attachToCamera(Camera* camera) override;
     void detachFromCamera(Camera* camera) override;
-    
     void toggleSkyboxMode();
-    
+
+private:
     std::unique_ptr<Shader> modelShader;
     std::unique_ptr<Shader> modelShader2;
     std::unique_ptr<Shader> plainShader;
@@ -40,7 +35,10 @@ public:
     
     std::vector<std::unique_ptr<Light>> lights;
 
-private:
+    std::shared_ptr<TransformBezier> formulaBezierTrans;
+    int formulaObjectIndex;
+    float bezierAnimSpeed = 0.15f;
+    //
     void drawSkybox();
     bool isInsideSkybox = true;
 };

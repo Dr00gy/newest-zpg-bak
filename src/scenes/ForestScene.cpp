@@ -7,11 +7,10 @@
 void ForestScene::init() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    std::string vertexSrc = loadShaderSource("src/shaders/vertex.glsl");
-    std::string fragGreenSrc = loadShaderSource("src/shaders/frag_green.glsl");
-    std::string fragTriangleSrc = loadShaderSource("src/shaders/frag_triangle.glsl");
-    std::string fragRectangleSrc = loadShaderSource("src/shaders/frag_rectangle.glsl");
-
+    std::string vertexSrc = loadShaderSrc("src/shaders/vertex.glsl");
+    std::string fragGreenSrc = loadShaderSrc("src/shaders/frag_green.glsl");
+    std::string fragTriangleSrc = loadShaderSrc("src/shaders/frag_triangle.glsl");
+    std::string fragRectangleSrc = loadShaderSrc("src/shaders/frag_rectangle.glsl");
     bushShader = std::make_unique<Shader>(vertexSrc.c_str(), fragGreenSrc.c_str());
     treeShader = std::make_unique<Shader>(vertexSrc.c_str(), fragRectangleSrc.c_str());
     plainShader = std::make_unique<Shader>(vertexSrc.c_str(), fragTriangleSrc.c_str());
@@ -27,15 +26,12 @@ void ForestScene::init() {
 
     for (int i = 0; i < 50; ++i) {
         auto bushTransform = std::make_shared<TransformComposite>();
-        
         float x = ((rand() % 400) / 10.0f) - 20.0f;
         float z = ((rand() % 400) / 10.0f) - 20.0f;
         bushTransform->add(std::make_shared<TransformTranslation>(glm::vec3(x, -1.0f, z)));
-        
         bushTransform->add(std::make_shared<TransformRotation>(
             static_cast<float>(rand() % 360), glm::vec3(0.0f, 1.0f, 0.0f)
         ));
-        
         float scale = 0.3f + ((rand() % 50) / 100.0f);
         bushTransform->add(std::make_shared<TransformScale>(glm::vec3(scale, scale, scale)));
         
@@ -44,15 +40,12 @@ void ForestScene::init() {
 
     for (int i = 0; i < 50; ++i) {
         auto treeTransform = std::make_shared<TransformComposite>();
-        
         float x = ((rand() % 400) / 10.0f) - 20.0f;
         float z = ((rand() % 400) / 10.0f) - 20.0f;
         treeTransform->add(std::make_shared<TransformTranslation>(glm::vec3(x, -1.0f, z)));
-        
         treeTransform->add(std::make_shared<TransformRotation>(
             static_cast<float>(rand() % 360), glm::vec3(0.0f, 1.0f, 0.0f)
         ));
-        
         float scale = 0.5f + ((rand() % 70) / 100.0f);
         treeTransform->add(std::make_shared<TransformScale>(glm::vec3(scale, scale, scale)));
         

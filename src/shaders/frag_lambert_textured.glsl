@@ -25,7 +25,7 @@ void main() {
     if (isSun) {
         float distFromCenter = length(FragPos - light.position);
 
-        // inside sun sphere → pure emission
+        // inside sun sphere? pure emission
         if (distFromCenter < sunRadius) {
             fragColor = vec4(textureColor * sunGlow, 1.0);
             return;

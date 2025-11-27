@@ -1,7 +1,7 @@
 #pragma once
 #include "Model.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
+#include "renderers/Shader.hpp"
+#include "renderers/Texture.hpp"
 #include "trans/Transform.hpp"
 #include <memory>
 
@@ -10,4 +10,5 @@ struct DrawableObject {
     Shader* shader;
     std::shared_ptr<Transform> transform;
     Texture* texture = nullptr;
+    Material material = Material::Plastic();
 };

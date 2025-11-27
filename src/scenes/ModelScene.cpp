@@ -150,28 +150,28 @@ void ModelScene::drawSkybox() {
         
         skyboxTexture->bind(0);
         skyboxShader->SetUniform("skybox", 0);
-        goldTexture->bind(0);
-        goldTexture->unbind();
         skyboxModel->draw(GL_TRIANGLES);
 
         glDepthFunc(GL_LESS);
         glUseProgram(0);
     } else {
         cubeShader->use();
-        
         auto cubeTransform = std::make_shared<TransformComposite>();
         cubeTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, 0.0f, 0.0f)));
         cubeTransform->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
         
-        cubeShader->SetUniform("useTexture", true);
         glm::mat4 model = cubeTransform->getMatrix();
         cubeShader->SetUniform("model", model);
         cubeShader->SetUniform("view", attachedCamera->getViewMat());
         cubeShader->SetUniform("projection", attachedCamera->getProjMat());
         
+        goldTexture->bind(0);
         cubeShader->SetUniform("textureSampler", 0);
+        cubeShader->SetUniform("useTexture", true);
         
         skyboxModel->draw(GL_TRIANGLES);
+        
+        goldTexture->unbind();
         glUseProgram(0);
     }
 }
@@ -213,5 +213,5 @@ void ModelScene::detachFromCamera(Camera* camera) {
 
 void ModelScene::toggleSkyboxMode() {
     isInsideSkybox = !isInsideSkybox;
-    std::cout << "Skybox mode: " << (isInsideSkybox ? "Inside" : "Outside") << std::endl;
+    std::cout << "Skybox mode is " << (isInsideSkybox ? "Inside" : "Outside") << std::endl;
 }

@@ -1,5 +1,4 @@
 #include "MultiShaderForestScene.hpp"
-
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -274,33 +273,22 @@ void MultiShaderForestScene::init() {
     std::cout << "Initial mode is CREATION (Press M to switch modes)!" << std::endl;
 }
 
-glm::vec3 MultiShaderForestScene::mouseToWorld(double xpos, double ypos, int W, int H) {
-    if (!attachedCamera) return glm::vec3(0.0f);
-    float winX = static_cast<float>(xpos);
-    float winY = static_cast<float>(H - ypos);
-    glm::vec4 viewport(0, 0, W, H);
-    glm::mat4 view = attachedCamera->getViewMat();
-    glm::mat4 proj = attachedCamera->getProjMat();
-    glm::vec3 nearP = glm::unProject({winX, winY, 0.0f}, view, proj, viewport);
-    glm::vec3 farP  = glm::unProject({winX, winY, 1.0f}, view, proj, viewport);
-
-    glm::vec3 dir = glm::normalize(farP - nearP);
-    float t = (-1.0f - nearP.y) / dir.y;
-
-    return nearP + dir * t;
-}
-
-
-int MultiShaderForestScene::findShroomAtPos(const glm::vec3& worldPos) {
-    const float SELECTION_RADIUS = 1.0f;
-    for (int i = 0; i < shroomObjects.size(); ++i) {
-        glm::vec3 diff = worldPos - shroomObjects[i].position;
-        float dist = glm::length(glm::vec2(diff.x, diff.z));
-        
-        if (dist < SELECTION_RADIUS) {
-            return static_cast<int>(i);
-        }
+int MultiShaderForestScene::getShroomAtCursor(double xpos, double ypos, int W, int H) {
+    int x = static_cast<int>(xpos);
+    int y = H - static_cast<int>(ypos);
+    
+    if (x < 0 || x >= W || y < 0 || y >= H) return -1;
+    
+    GLubyte stencilValue;
+    glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &stencilValue);
+    
+    if (stencilValue == 0) return -1;
+    
+    int shroomIdx = static_cast<int>(stencilValue) - 1;
+    if (shroomIdx >= 0 && shroomIdx < shroomObjects.size()) {
+        return shroomIdx;
     }
+    
     return -1;
 }
 
@@ -317,54 +305,72 @@ void MultiShaderForestScene::addShroomAtPos(const glm::vec3& worldPos) {
     std::cout << "Added shroom at (" << worldPos.x << ", " << worldPos.y << ", " << worldPos.z << ")" << std::endl;
 }
 
-void MultiShaderForestScene::deleteShroomAtPos(const glm::vec3& worldPos) {
-    int shroomIndex = findShroomAtPos(worldPos);
-    if (shroomIndex >= 0) {
-        int objIndex = shroomObjects[shroomIndex].objectIndex;
+void MultiShaderForestScene::deleteShroomAtCursor(double xpos, double ypos, int W, int H) {
+    int shroomIndex = getShroomAtCursor(xpos, ypos, W, H);
+    if (shroomIndex < 0) return;
+    
+    int objIndex = shroomObjects[shroomIndex].objectIndex;
 
-        if (objIndex < objects.size()) {
-            objects.erase(objects.begin() + objIndex);
-            
-            for (int i = 0; i < shroomObjects.size(); ++i) {
-                if (shroomObjects[i].objectIndex > objIndex) {
-                    shroomObjects[i].objectIndex--;
-                }
-            }
-            
-            for (auto& ls : lightSpheres) {
-                if (ls.objectIndex > objIndex) {
-                    ls.objectIndex--;
-                }
-            }
-            
-            if (shrekObjectIndex > objIndex) {
-                shrekObjectIndex--;
+    if (objIndex < objects.size()) {
+        objects.erase(objects.begin() + objIndex);
+        
+        for (int i = 0; i < shroomObjects.size(); ++i) {
+            if (shroomObjects[i].objectIndex > objIndex) {
+                shroomObjects[i].objectIndex--;
             }
         }
         
-        shroomObjects.erase(shroomObjects.begin() + shroomIndex);
-        std::cout << "Deleted shroom" << std::endl;
+        for (auto& ls : lightSpheres) {
+            if (ls.objectIndex > objIndex) {
+                ls.objectIndex--;
+            }
+        }
+        
+        if (shrekObjectIndex > objIndex) {
+            shrekObjectIndex--;
+        }
     }
+    
+    shroomObjects.erase(shroomObjects.begin() + shroomIndex);
+    std::cout << "Deleted shroom" << std::endl;
+}
+
+glm::vec3 MultiShaderForestScene::mouseToWorld(double xpos, double ypos, int W, int H) {
+    if (!attachedCamera) return glm::vec3(0.0f);
+    float winX = static_cast<float>(xpos);
+    float winY = static_cast<float>(H - ypos);
+    glm::vec4 viewport(0, 0, W, H);
+    glm::mat4 view = attachedCamera->getViewMat();
+    glm::mat4 proj = attachedCamera->getProjMat();
+    glm::vec3 nearP = glm::unProject({winX, winY, 0.0f}, view, proj, viewport);
+    glm::vec3 farP  = glm::unProject({winX, winY, 1.0f}, view, proj, viewport);
+
+    glm::vec3 dir = glm::normalize(farP - nearP);
+    float t = (-1.0f - nearP.y) / dir.y;
+
+    return nearP + dir * t;
 }
 
 void MultiShaderForestScene::handleMouseClick(double xpos, double ypos, int width, int height) {
-    glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
     switch(editMode) {
-        case EditMode::CREATION:
+        case EditMode::CREATION: {
+            glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
             addShroomAtPos(worldPos);
             break;
+        }
         case EditMode::DELETION:
-            deleteShroomAtPos(worldPos);
+            deleteShroomAtCursor(xpos, ypos, width, height);
             break;
-        case EditMode::BEZIER_EDIT:
+        case EditMode::BEZIER_EDIT: {
+            glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
             addBezierPoint(worldPos);
             break;
+        }
     }
 }
 
 void MultiShaderForestScene::updateMouseHover(double xpos, double ypos, int width, int height) {
-    glm::vec3 worldPos = mouseToWorld(xpos, ypos, width, height);
-    hoveredShroomIndex = findShroomAtPos(worldPos);
+    hoveredShroomIndex = getShroomAtCursor(xpos, ypos, width, height);
 }
 
 void MultiShaderForestScene::drawShroomsWStencil() {
@@ -420,7 +426,6 @@ void MultiShaderForestScene::draw() {
         
         fireflyRotations[i]->setAngle(angle);
         
-        // change ONLY light positions for shaders to follow the moving balls
         glm::mat4 transform = objects[lightSpheres[i].objectIndex].transform->getMatrix();
         glm::vec3 pos = glm::vec3(transform[3]);
         lights[i]->setPosition(pos);
@@ -461,11 +466,25 @@ void MultiShaderForestScene::draw() {
     
     glUseProgram(0);
     
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glStencilMask(0xFF);
+    
+    // non-shroom objects stencil value 0
     for (int i = 0; i < objects.size(); ++i) {
         bool isLightSphere = false;
         for (int j = 0; j < lightSpheres.size(); ++j) {
             if (i == lightSpheres[j].objectIndex) {
                 isLightSphere = true;
+                break;
+            }
+        }
+        
+        bool isShroom = false;
+        for (int j = 0; j < shroomObjects.size(); ++j) {
+            if (i == shroomObjects[j].objectIndex) {
+                isShroom = true;
                 break;
             }
         }
@@ -477,7 +496,7 @@ void MultiShaderForestScene::draw() {
             }
         }
         
-        if (!isLightSphere && !isHoveredShroom) {
+        if (!isLightSphere && !isShroom && !isHoveredShroom) {
             auto& obj = objects[i];
             obj.shader->use();
             
@@ -495,6 +514,31 @@ void MultiShaderForestScene::draw() {
             }
         }
     }
+    
+    for (int i = 0; i < shroomObjects.size(); i++) {
+        if (hoveredShroomIndex >= 0 && i == hoveredShroomIndex) continue;
+        
+        glStencilFunc(GL_ALWAYS, i + 1, 0xFF);
+        
+        auto& obj = objects[shroomObjects[i].objectIndex];
+        obj.shader->use();
+        
+        if (obj.texture) {
+            obj.texture->bind(0);
+            obj.shader->SetUniform("textureSampler", 0);
+        }
+        
+        glm::mat4 model = obj.transform->getMatrix();
+        obj.shader->SetUniform("model", model);
+        obj.model->draw(GL_TRIANGLES);
+        
+        if (obj.texture) {
+            obj.texture->unbind();
+        }
+    }
+    
+    glStencilMask(0x00);
+    glDisable(GL_STENCIL_TEST);
     
     drawShroomsWStencil();
     

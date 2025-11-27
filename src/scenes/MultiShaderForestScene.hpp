@@ -86,10 +86,10 @@ private:
     std::vector<glm::vec3> bezierControlPoints;
     
     glm::vec3 mouseToWorld(double xpos, double ypos, int width, int height);
-    int findShroomAtPos(const glm::vec3& worldPos);
+    int getShroomAtCursor(double xpos, double ypos, int W, int H);
     void drawShroomsWStencil();
     void addShroomAtPos(const glm::vec3& worldPos);
-    void deleteShroomAtPos(const glm::vec3& worldPos);
+    void deleteShroomAtCursor(double xpos, double ypos, int W, int H);
     void addBezierPoint(const glm::vec3& worldPos);
     void updateBezierPath();
 };

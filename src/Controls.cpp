@@ -152,7 +152,6 @@ void Controls::procEditModeToggle(MultiShaderForestScene* forestScene) {
         if (!mPressed) {
             if (forestScene) {
                 forestScene->toggleEditMode();
-                std::cout << "Edit mode: " << (forestScene->isEditMode() ? "CREATION" : "DELETION") << std::endl;
             }
             mPressed = true;
         }

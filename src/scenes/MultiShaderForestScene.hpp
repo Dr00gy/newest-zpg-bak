@@ -21,10 +21,10 @@ public:
         editMode = static_cast<EditMode>((static_cast<int>(editMode) + 1) % 3);
         switch(editMode) {
             case EditMode::CREATION:
-                std::cout << "Mode switched to: SHROOM CREATION" << std::endl;
+                std::cout << "Mode switched to: CREATION" << std::endl;
                 break;
             case EditMode::DELETION:
-                std::cout << "Mode switched to: SHROOM DELETION" << std::endl;
+                std::cout << "Mode switched to: DELETION" << std::endl;
                 break;
             case EditMode::BEZIER_EDIT:
                 std::cout << "Mode switched to: BEZIER PATH EDIT" << std::endl;

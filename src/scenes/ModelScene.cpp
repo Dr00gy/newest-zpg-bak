@@ -116,7 +116,7 @@ void ModelScene::init() {
         glm::vec3(3.0f, -1.0f, 1.0f),
         glm::vec3(5.0f, -1.0f, 5.0f),
 
-        glm::vec3(5.0f, -1.0f, 7.0f),
+        glm::vec3(6.0f, -1.0f, 8.0f),
         glm::vec3(1.0f, -1.0f, 8.0f),
         glm::vec3(0.0f, -1.0f, 5.0f),
 
@@ -132,6 +132,7 @@ void ModelScene::init() {
     formulaTransform->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(0,1,0)));
     formulaTransform->add(std::make_shared<TransformTranslation>(glm::vec3(-2.0f, -1.0f, -2.0f)));
     formulaTransform->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
+    formulaTransform->add(std::make_shared<TransformRotation>(-180.0f, glm::vec3(0,1,0)));
     
     formulaObjectIndex = objects.size();
     addObject(formulaModel.get(), modelShader2.get(), formulaTransform);

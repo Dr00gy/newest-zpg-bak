@@ -18,10 +18,8 @@ WhackAMoleScene::WhackAMoleScene()
 void WhackAMoleScene::init() {
     std::string vertexTexturedSrc = loadShaderSrc("src/shaders/vertex_textured.glsl");
     std::string fragPhongTexturedSrc = loadShaderSrc("src/shaders/mult_phong_textured.glsl");
-    std::string fragStencilSrc = loadShaderSrc("src/shaders/stencil.glsl");
 
     phongTexturedShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedSrc.c_str());
-    stencilShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragStencilSrc.c_str());
 
     cupModel = ModelFactory::CreateCup();
     shrekModel = ModelFactory::CreateShrek();
@@ -90,12 +88,10 @@ void WhackAMoleScene::initializeHoles() {
 
 void WhackAMoleScene::spawnEnemy() {
     if (enemiesSpawned >= MAX_ENEMIES) return;
-
     std::vector<int> freeHoles;
     for (int i = 0; i < holes.size(); i++)
         if (holes[i].activeEnemyIdx == -1)
             freeHoles.push_back(i);
-
     if (freeHoles.empty()) return;
     int holeIdx = freeHoles[holeDistrib(rng) % freeHoles.size()];
 
@@ -164,7 +160,6 @@ void WhackAMoleScene::tryMoveEnemy(int i) {
         if (holes[adj].activeEnemyIdx == -1)
             freeAdjacent.push_back(adj);
     if (freeAdjacent.empty()) return;
-
     int toHole = freeAdjacent[std::uniform_int_distribution<>(0, freeAdjacent.size() - 1)(rng)];
     startEnemyMov(i, fromHole, toHole);
 }
@@ -207,9 +202,7 @@ void WhackAMoleScene::updateEnemies(float dt) {
             e.position = e.moveTransform->getPositionOnPath();
 
             auto tr = std::make_shared<TransformComposite>();
-            if (e.type == EnemyType::MUSHROOM)
-                tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
-            
+            if (e.type == EnemyType::MUSHROOM) tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
             tr->add(e.moveTransform);
 
             float scale = (e.type == EnemyType::MUSHROOM ? 0.05f : 2.0f);
@@ -231,8 +224,7 @@ void WhackAMoleScene::updateEnemies(float dt) {
                 float scale = (e.type == EnemyType::MUSHROOM ? 0.05f : 2.0f);
                 float ys = 1.0f - 0.8f * p;
                 auto tr = std::make_shared<TransformComposite>();
-                if (e.type == EnemyType::MUSHROOM)
-                    tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
+                if (e.type == EnemyType::MUSHROOM) tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));
                 tr->add(std::make_shared<TransformTranslation>(e.position));
                 tr->add(std::make_shared<TransformScale>(glm::vec3(scale, scale * ys, scale)));
                 objects[e.objectIndex].transform = tr;
@@ -286,31 +278,19 @@ void WhackAMoleScene::update(float dt) {
     }
 }
 
-glm::vec3 WhackAMoleScene::mouseToWorld(double xpos, double ypos, int W, int H) {
-    if (!attachedCamera) return glm::vec3(0);
-    float x = static_cast<float>(xpos);
-    float y = static_cast<float>(H - ypos);
-    glm::vec4 viewport(0, 0, W, H);
-    glm::mat4 view = attachedCamera->getViewMat();
-    glm::mat4 proj = attachedCamera->getProjMat();
-    glm::vec3 nearP = glm::unProject({x, y, 0}, view, proj, viewport);
-    glm::vec3 farP = glm::unProject({x, y, 1}, view, proj, viewport);
+int WhackAMoleScene::getEnemyAtCursor(double xpos, double ypos, int W, int H) {
+    int x = static_cast<int>(xpos);
+    int y = H - static_cast<int>(ypos);
+    if (x < 0 || x >= W || y < 0 || y >= H) return -1;
+    GLubyte stencilValue;
+    glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &stencilValue);
     
-    glm::vec3 dir = glm::normalize(farP - nearP);
-    float t = (0.5f - nearP.y) / dir.y;
-    
-    return nearP + dir * t;
-}
-
-int WhackAMoleScene::findEnemyAtPos(const glm::vec3& pos) {
-    for (int i = 0; i < enemies.size(); i++) {
-        auto& e = enemies[i];
-        if (!e.isAlive || e.isSquished) continue;
-        glm::vec3 d = pos - e.position;
-        float dist = glm::length(glm::vec2(d.x, d.z));
-        if (dist < SELECTION_RADIUS)
-            return i;
+    if (stencilValue == 0) return -1;
+    int enemyIdx = static_cast<int>(stencilValue) - 1;
+    if (enemyIdx >= 0 && enemyIdx < enemies.size() && enemies[enemyIdx].isAlive && !enemies[enemyIdx].isSquished) {
+        return enemyIdx;
     }
+    
     return -1;
 }
 
@@ -343,14 +323,15 @@ void WhackAMoleScene::spawnHammer(const glm::vec3& pos) {
 }
 
 void WhackAMoleScene::handleMouseClick(double xpos, double ypos, int W, int H) {
-    glm::vec3 wp = mouseToWorld(xpos, ypos, W, H);
-    int idx = findEnemyAtPos(wp);
-    if (idx >= 0) hitEnemy(idx, wp);
+    int idx = getEnemyAtCursor(xpos, ypos, W, H);
+    if (idx >= 0) {
+        glm::vec3 wp = enemies[idx].position;
+        hitEnemy(idx, wp);
+    }
 }
 
 void WhackAMoleScene::updateMouseHover(double xpos, double ypos, int W, int H) {
-    glm::vec3 wp = mouseToWorld(xpos, ypos, W, H);
-    hoveredEnemyIdx = findEnemyAtPos(wp);
+    hoveredEnemyIdx = getEnemyAtCursor(xpos, ypos, W, H);
 }
 
 void WhackAMoleScene::draw() {
@@ -360,12 +341,21 @@ void WhackAMoleScene::draw() {
     phongTexturedShader->updateAllLights();
     glUseProgram(0);
 
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glStencilMask(0xFF);
+    
+    // non-enemy objects stencil value 0
     for (int i = 0; i < objects.size(); i++) {
-        bool dead = false;
-        for (auto& e : enemies)
-            if (i == e.objectIndex && !e.isAlive)
-                dead = true;
-        if (dead) continue;
+        bool skipObject = false;
+        for (auto& e : enemies) {
+            if (i == e.objectIndex) {
+                skipObject = true;
+                break;
+            }
+        }
+        if (skipObject) continue;
 
         auto& obj = objects[i];
         obj.shader->use();
@@ -382,6 +372,31 @@ void WhackAMoleScene::draw() {
 
         if (obj.texture) obj.texture->unbind();
     }
+    
+    for (int i = 0; i < enemies.size(); i++) {
+        auto& e = enemies[i];
+        if (!e.isAlive) continue;
+        
+        glStencilFunc(GL_ALWAYS, i + 1, 0xFF);
+        
+        auto& obj = objects[e.objectIndex];
+        obj.shader->use();
+
+        if (obj.texture) {
+            obj.texture->bind(0);
+            obj.shader->SetUniform("textureSampler", 0);
+            obj.shader->SetUniform("useTexture", true);
+        } else obj.shader->SetUniform("useTexture", false);
+
+        glm::mat4 model = obj.transform->getMatrix();
+        obj.shader->SetUniform("model", model);
+        obj.model->draw(GL_TRIANGLES);
+
+        if (obj.texture) obj.texture->unbind();
+    }
+    
+    glStencilMask(0x00);
+    glDisable(GL_STENCIL_TEST);
     glUseProgram(0);
 }
 

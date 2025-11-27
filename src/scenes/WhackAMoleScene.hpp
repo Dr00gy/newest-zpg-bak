@@ -52,7 +52,6 @@ private:
     };
 
     std::unique_ptr<Shader> phongTexturedShader;
-    std::unique_ptr<Shader> stencilShader;
 
     std::unique_ptr<Model> cupModel;
     std::unique_ptr<Model> shrekModel;
@@ -88,7 +87,6 @@ private:
     const float ENEMY_LIFETIME = 3.0f;
     const float HAMMER_LIFETIME = 0.2f;
     const float SQUISH_DURATION = 0.3f;
-    const float SELECTION_RADIUS = 1.0f;
     const float MOVE_DURATION = 0.6f;
 
     void initializeHoles();
@@ -99,6 +97,5 @@ private:
     void startEnemyMov(int enemyIndex, int holeFrom, int holeTo);
     void hitEnemy(int enemyIndex, const glm::vec3& hitPosition);
     void spawnHammer(const glm::vec3& position);
-    glm::vec3 mouseToWorld(double xpos, double ypos, int W, int H);
-    int findEnemyAtPos(const glm::vec3& worldPos);
+    int getEnemyAtCursor(double xpos, double ypos, int W, int H);
 };

@@ -16,6 +16,7 @@ private:
     std::unique_ptr<Shader> shader;
     std::unique_ptr<Shader> shaderSun;
     std::unique_ptr<Shader> texturedShader;
+
     std::unique_ptr<Model> sphereModel;
     
     std::unique_ptr<Texture> mercuryTexture;
@@ -32,6 +33,29 @@ private:
     std::unique_ptr<Light> light;
     
     std::shared_ptr<TransformComposite> sunTransform;
-    std::vector<std::shared_ptr<TransformComposite>> planetTransforms;
-    std::vector<std::shared_ptr<TransformComposite>> moonTransforms;
+    std::shared_ptr<TransformRotation> sunRotationTransform;
+    
+    struct PlanetData {
+        float axisWide;
+        float axisNarrow;
+        float orbitalSpeed;
+        float scale;
+        float moonOrbitRadius;
+        float moonSpeed;
+        float moonScale;
+        float rotationSpeed;
+        
+        std::shared_ptr<TransformRotation> orbitRotation;
+        std::shared_ptr<TransformTranslation> orbitTranslation;
+        std::shared_ptr<TransformRotation> selfRotation;
+        
+        std::shared_ptr<TransformRotation> moonOrbitRotation;
+        std::shared_ptr<TransformTranslation> moonOrbitTranslation;
+        std::shared_ptr<TransformRotation> moonSelfRotation;
+        
+        float accumulatedAngle = 0.0f;
+        float lastTime = 0.0f;
+    };
+    
+    std::vector<PlanetData> planets;
 };

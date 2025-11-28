@@ -19,7 +19,7 @@ public:
                       glm::vec4(-3.0, 3.0, 0.0, 0.0),
                       glm::vec4(1.0, 0.0, 0.0, 0.0));
     }
-    // Spline const
+
     TransformBezier(const std::vector<glm::vec3>& pts, float t = 0.0f)
         : ctrlPts(pts), param(t) {
         A = glm::mat4(glm::vec4(-1.0, 3.0, -3.0, 1.0),

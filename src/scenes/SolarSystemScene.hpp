@@ -46,7 +46,7 @@ private:
         float rotationSpeed;
         
         std::shared_ptr<TransformRotation> orbitRotation;
-        std::shared_ptr<TransformTranslation> orbitTranslation;
+        std::shared_ptr<TransformBezier> orbitBezier;
         std::shared_ptr<TransformRotation> selfRotation;
         
         std::shared_ptr<TransformRotation> moonOrbitRotation;

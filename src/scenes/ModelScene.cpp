@@ -135,7 +135,7 @@ void ModelScene::init() {
     formulaTransform->add(std::make_shared<TransformRotation>(-180.0f, glm::vec3(0,1,0)));
     
     formulaObjectIndex = objects.size();
-    addObject(formulaModel.get(), modelShader2.get(), formulaTransform);
+    addObject(formulaModel.get(), modelShader2.get(), formulaTransform, nullptr, Material::Metal());
 }
 
 void ModelScene::drawSkybox() {

@@ -81,8 +81,9 @@ void ModelScene::init() {
     
     auto objTransform = std::make_shared<TransformComposite>();
     objTransform->add(customWTransform);
-    objTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
-    objTransform->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
+    objTransform->add(std::make_shared<TransformTranslation>(glm::vec3(1.0f, -1.0f, -1.0f)));
+    objTransform->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
+    objTransform->add(std::make_shared<TransformScale>(glm::vec3(3.0f, 3.0f, 3.0f)));
     addObject(loginModel.get(), textureShader.get(), objTransform, loginTexture.get(), Material::Stone());
     
     auto objTransform2 = std::make_shared<TransformComposite>();

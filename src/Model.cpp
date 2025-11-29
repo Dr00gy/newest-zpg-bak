@@ -79,11 +79,9 @@ Model::Model(float* vertices, size_t size, int stride, ModelType type)
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 
     bindAttributes(type, VAO, VBO, stride);
     glBindVertexArray(0);

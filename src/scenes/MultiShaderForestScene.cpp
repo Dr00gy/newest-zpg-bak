@@ -261,13 +261,13 @@ void MultiShaderForestScene::init() {
     auto shrekTransform = std::make_shared<TransformComposite>();
     shrekTransform->add(shrekBezierTrans);
     shrekObjectIndex = objects.size();
-    addObject(shrekModel.get(), phongTexturedShader.get(), shrekTransform, shrekTexture.get());
+    addObject(shrekModel.get(), phongTexturedShader.get(), shrekTransform, shrekTexture.get(), Material::Shrek());
 
     auto fionaTransform = std::make_shared<TransformComposite>();
     fionaTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
     auto toiletTransform = std::make_shared<TransformComposite>();
     toiletTransform->add(std::make_shared<TransformTranslation>(glm::vec3(-3.0f, -1.0f, -3.0f)));
-    addObject(fionaModel.get(), phongTexturedShader.get(), fionaTransform, fionaTexture.get());
+    addObject(fionaModel.get(), phongTexturedShader.get(), fionaTransform, fionaTexture.get(), Material::Fiona());
     addObject(toiletModel.get(), phongTexturedShader.get(), toiletTransform, toiletTexture.get());
     
     std::cout << "Initial mode is CREATION (Press M to switch modes)!" << std::endl;

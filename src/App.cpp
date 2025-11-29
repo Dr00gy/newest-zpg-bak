@@ -15,7 +15,7 @@ App::~App() {
 
 void App::init() {
     if (!glfwInit()) {
-        std::cerr << "Failed to init GLFW!\n";
+        std::cerr << "Failed to init GLFW!!!\n";
         exit(EXIT_FAILURE);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -24,7 +24,7 @@ void App::init() {
 
     window = glfwCreateWindow(800, 600, "ZPG", nullptr, nullptr);
     if (!window) {
-        std::cerr << "Failed to create GLFW window!\n";
+        std::cerr << "Failed to create GLFW window!!!\n";
         glfwTerminate();
         exit(EXIT_FAILURE);
     }

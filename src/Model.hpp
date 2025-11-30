@@ -6,7 +6,8 @@
 enum class ModelType {
     BASIC,
     NORMAL,
-    UV
+    UV,
+    TAN
 };
 
 class Model {

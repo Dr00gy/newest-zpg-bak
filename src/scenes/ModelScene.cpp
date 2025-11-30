@@ -19,7 +19,10 @@ void ModelScene::init() {
     std::string skyboxFragmentSrc = loadShaderSrc("src/shaders/skybox_fragment.glsl");
     std::string cubeVertexSrc = loadShaderSrc("src/shaders/cube_vertex.glsl");
     std::string cubeFragmentSrc = loadShaderSrc("src/shaders/cube_fragment.glsl");
-
+    // NORMAL MAP STUFF
+    std::string normalMapVertexSrc = loadShaderSrc("src/shaders/vertex_tan.glsl");
+    std::string normalMapFragmentSrc = loadShaderSrc("src/shaders/mult_phong_t_m_normal.glsl");
+    
     modelShader = std::make_unique<Shader>(vertexSrc.c_str(), fragSrc.c_str());
     plainShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedSrc.c_str());
     textureShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedSrc.c_str());
@@ -28,6 +31,8 @@ void ModelScene::init() {
     //
     modelShader2 = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongMaterialSrc.c_str());
     textureShader = std::make_unique<Shader>(vertexTexturedSrc.c_str(), fragPhongTexturedMaterialSrc.c_str());
+    //
+    normalMapShader = std::make_unique<Shader>(normalMapVertexSrc.c_str(), normalMapFragmentSrc.c_str());
 
     loginModel = ModelFactory::CreateLogin();
     houseModel = ModelFactory::CreateHouse();
@@ -36,11 +41,15 @@ void ModelScene::init() {
     bicycleModel = ModelFactory::CreateBicycle();
     plainModel = ModelFactory::CreateNPlain();
     skyboxModel = ModelFactory::CreateCube();
+    boxModel = ModelFactory::CreateBox();
 
     loginTexture = std::make_unique<Texture>("src/images/grunge.jpg");
     houseTexture = std::make_unique<Texture>("src/images/model.png");
     goldTexture = std::make_unique<Texture>("src/images/gold.jpg");
     grassTexture = std::make_unique<Texture>("src/images/grass.png");
+    //
+    boxAlbedoTexture = std::make_unique<Texture>("src/images/albedo2.png");
+    boxNormalTexture = std::make_unique<Texture>("src/images/normalmap.png");
     
     std::vector<std::string> skyboxFaces = {
         "src/images/skybox/right.png",
@@ -62,13 +71,16 @@ void ModelScene::init() {
 
     textureShader->addLight(light1.get());
     modelShader2->addLight(light1.get());
+    normalMapShader->addLight(light1.get());
 
     light1->attach(modelShader2.get());
     light1->attach(textureShader.get());
+    light1->attach(normalMapShader.get());
     lights.push_back(std::move(light1));
 
     modelShader2->updateAllLights();
     textureShader->updateAllLights();
+    normalMapShader->updateAllLights();
 
     // ALL TRANSFORMS START HERE
     glm::mat4 customIdentity = glm::mat4(1.0f);
@@ -108,6 +120,14 @@ void ModelScene::init() {
     objTransform5->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
     addObject(bicycleModel.get(), textureShader.get(), objTransform5, goldTexture.get(), Material::Rubber());
 
+    // BOX
+    auto objTransform6 = std::make_shared<TransformComposite>();
+    objTransform6->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, 0.0f, -1.0f)));
+    objTransform6->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
+    addObjectWithNormalMap(boxModel.get(), normalMapShader.get(), objTransform6, 
+                          boxAlbedoTexture.get(), boxNormalTexture.get(), 
+                          Material::Stone(), 2);
+
     // MOVING FORMULA SECTION HERE
     float a = 1.0f;
     float b = 1.0f;
@@ -125,7 +145,7 @@ void ModelScene::init() {
     formulaTransform->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
     formulaTransform->add(std::make_shared<TransformRotation>(-180.0f, glm::vec3(0,1,0)));
     
-    formulaObjectIndex = objects.size();
+    formulaObjIdx = objects.size();
     addObject(formulaModel.get(), modelShader2.get(), formulaTransform, nullptr, Material::Metal());
 }
 
@@ -187,6 +207,9 @@ void ModelScene::draw() {
     modelShader2->use();
     modelShader2->SetUniform("objectColor", glm::vec3(r, g, b));
     modelShader2->updateAllLights();
+    
+    normalMapShader->use();
+    normalMapShader->updateAllLights();
     
     drawImpl();
 }

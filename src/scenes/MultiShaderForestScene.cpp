@@ -240,21 +240,9 @@ void MultiShaderForestScene::init() {
 
     std::vector<glm::vec3> bezierPoints = {
         glm::vec3(-3.0f, -1.0f, -2.0f),
-        glm::vec3(-3.0f, -1.0f, -1.0f),
-        glm::vec3(-1.0f, -1.0f, -1.0f),
+        glm::vec3(-5.0f, -1.0f, -1.0f),
+        glm::vec3(-1.0f, -1.0f, -8.0f),
         glm::vec3(0.0f, -1.0f, 0.0f),
-
-        glm::vec3(1.0f, -1.0f, 1.0f),
-        glm::vec3(3.0f, -1.0f, 1.0f),
-        glm::vec3(5.0f, -1.0f, 5.0f),
-
-        glm::vec3(5.0f, -1.0f, 7.0f),
-        glm::vec3(1.0f, -1.0f, 8.0f),
-        glm::vec3(0.0f, -1.0f, 5.0f),
-
-        glm::vec3(-1.0f, -1.0f, -1.0f),
-        glm::vec3(-3.0f, -1.0f, -1.0f),
-        glm::vec3(-3.0f, -1.0f, -2.0f)
     };
 
     shrekBezierTrans = std::make_shared<TransformBezier>(bezierPoints, 0.0f);

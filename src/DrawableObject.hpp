@@ -10,5 +10,7 @@ struct DrawableObject {
     Shader* shader;
     std::shared_ptr<Transform> transform;
     Texture* texture = nullptr;
+    Texture* normalMap = nullptr;
     Material material = Material::Plastic();
+    int normalIntensity = 1;
 };

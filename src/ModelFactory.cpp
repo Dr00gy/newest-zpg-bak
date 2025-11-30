@@ -76,3 +76,7 @@ std::unique_ptr<Model> ModelFactory::CreateShroom() {
 std::unique_ptr<Model> ModelFactory::CreateHammer() {
     return Model::LoadFromFile("src/objects/hammer.obj", ModelType::UV);
 }
+
+std::unique_ptr<Model> ModelFactory::CreateBox() {
+    return Model::LoadFromFile("src/objects/Nmodel.obj", ModelType::TAN);
+}

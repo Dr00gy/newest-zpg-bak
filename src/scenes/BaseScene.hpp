@@ -34,9 +34,16 @@ public:
     virtual void draw() = 0;
     virtual void attachToCamera(Camera* camera) = 0;
     virtual void detachFromCamera(Camera* camera) = 0;
+    
     void addObject(Model* model, Shader* shader, std::shared_ptr<Transform> transform, 
                    Texture* texture = nullptr, Material material = Material::Plastic()) {
-        objects.push_back({model, shader, transform, texture, material});
+        objects.push_back({model, shader, transform, texture, nullptr, material, 1});
+    }
+    
+    void addObjectWithNormalMap(Model* model, Shader* shader, std::shared_ptr<Transform> transform, 
+                                Texture* texture, Texture* normalMap, Material material = Material::Plastic(),
+                                int normalIntensity = 1) {
+        objects.push_back({model, shader, transform, texture, normalMap, material, normalIntensity});
     }
     
     void attachToCameraImpl(Camera* camera) {
@@ -78,12 +85,25 @@ public:
                 obj.shader->SetUniform("useTexture", false);
             }
             
+            if (obj.normalMap && obj.model->getType() == ModelType::TAN) {
+                obj.normalMap->bind(1);
+                obj.shader->SetUniform("normalMap", 1);
+                obj.shader->SetUniform("useNormalMap", true);
+                obj.shader->SetUniform("normalIntensity", obj.normalIntensity);
+            } else {
+                obj.shader->SetUniform("useNormalMap", false);
+            }
+            
             glm::mat4 model = obj.transform->getMatrix();
             obj.shader->SetUniform("model", model);
             obj.model->draw(GL_TRIANGLES);
             
             if (obj.texture) {
                 obj.texture->unbind();
+            }
+            if (obj.normalMap) {
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0);
             }
         }
         glUseProgram(0);

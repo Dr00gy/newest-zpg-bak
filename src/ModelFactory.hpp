@@ -27,4 +27,5 @@ public:
     static std::unique_ptr<Model> CreateToilet();
     static std::unique_ptr<Model> CreateShroom();
     static std::unique_ptr<Model> CreateHammer();
+    static std::unique_ptr<Model> CreateBox();
 };

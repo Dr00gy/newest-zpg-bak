@@ -34,7 +34,7 @@ void ModelScene::init() {
     formulaModel = ModelFactory::CreateFormula();
     cupModel = ModelFactory::CreateCup();
     bicycleModel = ModelFactory::CreateBicycle();
-    plainModel = ModelFactory::CreatePlain();
+    plainModel = ModelFactory::CreateNPlain();
     skyboxModel = ModelFactory::CreateCube();
 
     loginTexture = std::make_unique<Texture>("src/images/grunge.jpg");
@@ -53,10 +53,12 @@ void ModelScene::init() {
     skyboxTexture = std::make_unique<Texture>(skyboxFaces);
 
     auto light1 = std::make_unique<Light>(
-        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.5f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         LightType::POINT
     );
+    light1->setLinear(0.5f);
+    light1->setQuadratic(0.4f);
 
     textureShader->addLight(light1.get());
     modelShader2->addLight(light1.get());
@@ -76,19 +78,19 @@ void ModelScene::init() {
     auto plainTransform = std::make_shared<TransformComposite>();
     plainTransform->add(customWTransform);
     plainTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -1.0f, 0.0f)));
-    plainTransform->add(std::make_shared<TransformScale>(glm::vec3(20.0f, 1.0f, 20.0f)));
+    plainTransform->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
     addObject(plainModel.get(), textureShader.get(), plainTransform, grassTexture.get(), Material::Stone());
     
     auto objTransform = std::make_shared<TransformComposite>();
     objTransform->add(customWTransform);
-    objTransform->add(std::make_shared<TransformTranslation>(glm::vec3(1.0f, -1.0f, -1.0f)));
+    objTransform->add(std::make_shared<TransformTranslation>(glm::vec3(1.0f, 4.0f, -1.0f)));
     objTransform->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
     objTransform->add(std::make_shared<TransformScale>(glm::vec3(3.0f, 3.0f, 3.0f)));
     addObject(loginModel.get(), textureShader.get(), objTransform, loginTexture.get(), Material::Stone());
     
     auto objTransform2 = std::make_shared<TransformComposite>();
     objTransform2->add(customWTransform);
-    objTransform2->add(std::make_shared<TransformTranslation>(glm::vec3(8.0f, -1.0f, 8.0f)));
+    objTransform2->add(std::make_shared<TransformTranslation>(glm::vec3(8.0f, -1.0f, 4.0f)));
     objTransform2->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
     addObject(houseModel.get(), textureShader.get(), objTransform2, houseTexture.get(), Material::Plastic());
     
@@ -107,23 +109,11 @@ void ModelScene::init() {
     addObject(bicycleModel.get(), textureShader.get(), objTransform5, goldTexture.get(), Material::Rubber());
 
     // MOVING FORMULA SECTION HERE
+    float a = 1.0f;
+    float b = 1.0f;
     std::vector<glm::vec3> bezierPoints = {
-        glm::vec3(-3.0f, -1.0f, -2.0f),
-        glm::vec3(-3.0f, -1.0f, -1.0f),
-        glm::vec3(-1.0f, -1.0f, -1.0f),
-        glm::vec3(0.0f, -1.0f, 0.0f),
-
-        glm::vec3(1.0f, -1.0f, 1.0f),
-        glm::vec3(3.0f, -1.0f, 1.0f),
-        glm::vec3(5.0f, -1.0f, 5.0f),
-
-        glm::vec3(6.0f, -1.0f, 8.0f),
-        glm::vec3(1.0f, -1.0f, 8.0f),
-        glm::vec3(0.0f, -1.0f, 5.0f),
-
-        glm::vec3(-1.0f, -1.0f, -1.0f),
-        glm::vec3(-3.0f, -1.0f, -1.0f),
-        glm::vec3(-3.0f, -1.0f, -2.0f)
+        {0,0,-b}, {a,0,-b}, {a,0,b}, {0,0,b},
+        {-a,0,b}, {-a,0,-b}, {0,0,-b}
     };
 
     formulaBezierTrans = std::make_shared<TransformBezier>(bezierPoints, 0.0f);
@@ -159,7 +149,7 @@ void ModelScene::drawSkybox() {
         cubeShader->use();
         auto cubeTransform = std::make_shared<TransformComposite>();
         cubeTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, 0.0f, 0.0f)));
-        cubeTransform->add(std::make_shared<TransformScale>(glm::vec3(1.0f, 1.0f, 1.0f)));
+        cubeTransform->add(std::make_shared<TransformScale>(glm::vec3(0.2f, 0.2f, 0.2f)));
         
         glm::mat4 model = cubeTransform->getMatrix();
         cubeShader->SetUniform("model", model);
@@ -190,8 +180,12 @@ void ModelScene::draw() {
     textureShader->SetUniform("useTexture", true);
     textureShader->updateAllLights();
 
+    float r = 0.8f * (sin(time) + 1.0f);
+    float g = 0.8f * (sin(time + 2.0f));
+    float b = 0.8f * (sin(time + 4.0f));
+
     modelShader2->use();
-    modelShader2->SetUniform("objectColor", glm::vec3(0.400f, 0.137f, 0.936f)); // setting formula color in draw
+    modelShader2->SetUniform("objectColor", glm::vec3(r, g, b));
     modelShader2->updateAllLights();
     
     drawImpl();

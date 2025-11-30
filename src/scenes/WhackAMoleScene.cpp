@@ -50,7 +50,12 @@ void WhackAMoleScene::init() {
     light2->attach(phongTexturedShader.get());
     lights.push_back(std::move(light1));
     lights.push_back(std::move(light2));
+    
+    phongTexturedShader->use();
+    phongTexturedShader->SetUniform("objectColor", glm::vec3(1));
+    phongTexturedShader->SetUniform("shininess", 32.0f);
     phongTexturedShader->updateAllLights();
+    glUseProgram(0);
 
     auto plainTransform = std::make_shared<TransformComposite>();
     plainTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, -2.0f, 0.0f)));
@@ -89,9 +94,7 @@ void WhackAMoleScene::initializeHoles() {
 void WhackAMoleScene::spawnEnemy() {
     if (enemiesSpawned >= MAX_ENEMIES) return;
     std::vector<int> freeHoles;
-    for (int i = 0; i < holes.size(); i++)
-        if (holes[i].activeEnemyIdx == -1)
-            freeHoles.push_back(i);
+    for (int i = 0; i < holes.size(); i++) if (holes[i].activeEnemyIdx == -1) freeHoles.push_back(i);
     if (freeHoles.empty()) return;
     int holeIdx = freeHoles[holeDistrib(rng) % freeHoles.size()];
 
@@ -141,9 +144,7 @@ void WhackAMoleScene::tryMoveEnemy(int i) {
     if (moveChanceDistrib(rng) > 0.1f) return;
 
     int fromHole = -1;
-    for (int h = 0; h < holes.size(); h++)
-        if (holes[h].activeEnemyIdx == i)
-            fromHole = h;
+    for (int h = 0; h < holes.size(); h++) if (holes[h].activeEnemyIdx == i) fromHole = h;
     if (fromHole == -1) return;
 
     std::vector<int> adjacentHoles;
@@ -156,9 +157,7 @@ void WhackAMoleScene::tryMoveEnemy(int i) {
     if (row < 1) adjacentHoles.push_back(fromHole + 3);
 
     std::vector<int> freeAdjacent;
-    for (int adj : adjacentHoles)
-        if (holes[adj].activeEnemyIdx == -1)
-            freeAdjacent.push_back(adj);
+    for (int adj : adjacentHoles) if (holes[adj].activeEnemyIdx == -1) freeAdjacent.push_back(adj);
     if (freeAdjacent.empty()) return;
     int toHole = freeAdjacent[std::uniform_int_distribution<>(0, freeAdjacent.size() - 1)(rng)];
     startEnemyMov(i, fromHole, toHole);
@@ -335,18 +334,11 @@ void WhackAMoleScene::updateMouseHover(double xpos, double ypos, int W, int H) {
 }
 
 void WhackAMoleScene::draw() {
-    phongTexturedShader->use();
-    phongTexturedShader->SetUniform("objectColor", glm::vec3(1));
-    phongTexturedShader->SetUniform("shininess", 32.0f);
-    phongTexturedShader->updateAllLights();
-    glUseProgram(0);
-
-    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_STENCIL_TEST);// non-enemy objects stencil value 0
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
     glStencilMask(0xFF);
     
-    // non-enemy objects stencil value 0
     for (int i = 0; i < objects.size(); i++) {
         bool skipObject = false;
         for (auto& e : enemies) {

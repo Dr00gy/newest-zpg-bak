@@ -14,7 +14,8 @@ public:
     static std::unique_ptr<Model> CreateSphere();
     static std::unique_ptr<Model> CreateTree();
     static std::unique_ptr<Model> CreateTriangle();
-    static std::unique_ptr<Model> CreatePlain(ModelType type = ModelType::UV);
+    static std::unique_ptr<Model> CreatePlain();
+    static std::unique_ptr<Model> CreateNPlain();
     static std::unique_ptr<Model> CreatePlainSphere();
     static std::unique_ptr<Model> CreateLogin();
     static std::unique_ptr<Model> CreateHouse();

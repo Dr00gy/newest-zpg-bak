@@ -16,9 +16,13 @@ add_executable(kms
     src/Model.cpp
     src/Camera.cpp
     src/Controls.cpp
+    src/ModelFactory.cpp
+    src/Utils.cpp
     src/renderers/Shader.cpp
     src/renderers/Subject.cpp
     src/renderers/Texture.cpp
+    src/renderers/Material.cpp
+    src/renderers/Light.cpp
     src/scenes/RandomObjectsScene.cpp
     src/scenes/RotatingTriangleScene.cpp
     src/scenes/SymmetricalBallsScene.cpp

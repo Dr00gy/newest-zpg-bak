@@ -308,12 +308,10 @@ void MultiShaderForestScene::addShroomAtPos(const glm::vec3& worldPos) {
 void MultiShaderForestScene::deleteShroomAtCursor(double xpos, double ypos, int W, int H) {
     int shroomIndex = getShroomAtCursor(xpos, ypos, W, H);
     if (shroomIndex < 0) return;
-    
     int objIndex = shroomObjects[shroomIndex].objectIndex;
 
     if (objIndex < objects.size()) {
         objects.erase(objects.begin() + objIndex);
-        
         for (int i = 0; i < shroomObjects.size(); ++i) {
             if (shroomObjects[i].objectIndex > objIndex) {
                 shroomObjects[i].objectIndex--;
@@ -344,7 +342,7 @@ glm::vec3 MultiShaderForestScene::mouseToWorld(double xpos, double ypos, int W, 
     glm::mat4 proj = attachedCamera->getProjMat();
     glm::vec3 nearP = glm::unProject({winX, winY, 0.0f}, view, proj, viewport);
     glm::vec3 farP  = glm::unProject({winX, winY, 1.0f}, view, proj, viewport);
-
+    
     glm::vec3 dir = glm::normalize(farP - nearP);
     float t = (-1.0f - nearP.y) / dir.y;
 
@@ -421,7 +419,7 @@ void MultiShaderForestScene::draw() {
     }
     
     for (int i = 0; i < fireflyRotations.size(); ++i) {
-        float speed = 0.5f + i * 0.2f; 
+        float speed = 0.1f + i; 
         float angle = time * speed * 50.0f;
         
         fireflyRotations[i]->setAngle(angle);

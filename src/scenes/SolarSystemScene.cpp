@@ -43,6 +43,12 @@ void SolarSystemScene::init() {
     shader->updateAllLights();
     texturedShader->updateAllLights();
 
+    texturedShader->use();
+    texturedShader->SetUniform("useTexture", true);
+    texturedShader->SetUniform("shininess", 32.0f);
+    texturedShader->SetUniform("isSun", false);
+    glUseProgram(0);
+
     sunRotationTransform = std::make_shared<TransformRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     sunTransform = std::make_shared<TransformComposite>();
     sunTransform->add(sunRotationTransform);
@@ -74,8 +80,8 @@ void SolarSystemScene::init() {
         float cy = b;
 
         std::vector<glm::vec3> ellipsePoints = {
-            {0,0,-b}, {cx,0,-b}, {cx,0,b}, {0,0,b},
-            {-cx,0,b}, {-cx,0,-b}, {0,0,-b}
+            {0,0,-cy}, {cx,0,-cy}, {cx,0,cy}, {0,0,cy},
+            {-cx,0,cy}, {-cx,0,-cy}, {0,0,-cy}
         };
 
         planet.orbitBezier = std::make_shared<TransformBezier>(ellipsePoints, 0.0f);
@@ -111,9 +117,6 @@ void SolarSystemScene::init() {
 
 void SolarSystemScene::draw() {
     float time = static_cast<float>(glfwGetTime());
-    shader->use();
-    light->updateObservers();
-
     float sunRotation = fmod(time * 20.0f, 360.0f);
     sunRotationTransform->setAngle(sunRotation);
 
@@ -134,7 +137,6 @@ void SolarSystemScene::draw() {
             planet.moonSelfRotation->setAngle(moonRotation);
         }
     }
-    glUseProgram(0);
 
     objects[0].shader->use();
     if (objects[0].texture) {
@@ -155,6 +157,7 @@ void SolarSystemScene::draw() {
     }
     glUseProgram(0);
 
+    // PLANETS AND MOONS
     for (int i = 0; i < planets.size(); i++) {
         int planetIdx = 1 + i * 2;
         objects[planetIdx].shader->use();
@@ -162,14 +165,12 @@ void SolarSystemScene::draw() {
         if (objects[planetIdx].texture) {
             objects[planetIdx].texture->bind(0);
             objects[planetIdx].shader->SetUniform("textureSampler", 0);
-            objects[planetIdx].shader->SetUniform("useTexture", true);
+            objects[planetIdx].shader->SetUniform("isSun", false);
         }
         
-        objects[planetIdx].shader->SetUniform("shininess", 32.0f);
         if (attachedCamera) objects[planetIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
         model = objects[planetIdx].transform->getMatrix();
         objects[planetIdx].shader->SetUniform("model", model);
-        objects[planetIdx].shader->SetUniform("isSun", false);
         objects[planetIdx].model->draw(GL_TRIANGLES);
         
         if (objects[planetIdx].texture) {
@@ -184,11 +185,8 @@ void SolarSystemScene::draw() {
             if (objects[moonIdx].texture) {
                 objects[moonIdx].texture->bind(0);
                 objects[moonIdx].shader->SetUniform("textureSampler", 0);
-                objects[moonIdx].shader->SetUniform("useTexture", true);
-                objects[moonIdx].shader->SetUniform("isSun", false);
             }
             
-            objects[moonIdx].shader->SetUniform("shininess", 32.0f);
             if (attachedCamera) objects[moonIdx].shader->SetUniform("viewPos", attachedCamera->getPosition());
             model = objects[moonIdx].transform->getMatrix();
             objects[moonIdx].shader->SetUniform("model", model);

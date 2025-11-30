@@ -25,8 +25,12 @@ std::unique_ptr<Model> ModelFactory::CreateTriangle() {
     return std::make_unique<Model>(trianglePoints, sizeof(trianglePoints), 3, ModelType::BASIC);
 }
 
-std::unique_ptr<Model> ModelFactory::CreatePlain(ModelType type) {
-    return Model::LoadFromHeader(plain, sizeof(plain), 8, type);
+std::unique_ptr<Model> ModelFactory::CreatePlain() {
+    return Model::LoadFromHeader(plain, sizeof(plain), 8, ModelType::UV);
+}
+
+std::unique_ptr<Model> ModelFactory::CreateNPlain() {
+    return Model::LoadFromFile("src/objects/teren.obj", ModelType::UV);
 }
 
 std::unique_ptr<Model> ModelFactory::CreatePlainSphere() {

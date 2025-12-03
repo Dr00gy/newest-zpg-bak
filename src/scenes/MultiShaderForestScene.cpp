@@ -31,7 +31,7 @@ void MultiShaderForestScene::init() {
     toiletModel = ModelFactory::CreateToilet();
     shroomModel = ModelFactory::CreateShroom();
     
-    grassTexture = std::make_unique<Texture>("src/images/swamp.jpg");
+    grassTexture = std::make_unique<Texture>("src/images/swamp.png");
     shrekTexture = std::make_unique<Texture>("src/images/shrek.png");
     fionaTexture = std::make_unique<Texture>("src/images/fiona.png");
     toiletTexture = std::make_unique<Texture>("src/images/toiled.jpg");
@@ -364,12 +364,6 @@ void MultiShaderForestScene::drawShroomsWStencil() {
         return;
     }
     
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilMask(0xFF);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    
     int objIndex = shroomObjects[hoveredShroomIndex].objectIndex;
     auto& obj = objects[objIndex];
     obj.shader->use();
@@ -384,17 +378,6 @@ void MultiShaderForestScene::drawShroomsWStencil() {
     if (obj.texture) {
         obj.texture->unbind();
     }
-    
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
-    
-    obj.model->draw(GL_TRIANGLES);
-    
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
     
     glUseProgram(0);
 }

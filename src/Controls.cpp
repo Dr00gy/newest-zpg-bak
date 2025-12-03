@@ -97,10 +97,6 @@ void Controls::procCameraInput(float deltaTime) {
         camera->procKeyboard(CameraMov::DOWN, deltaTime);
 }
 
-void Controls::procInput(float deltaTime) {
-    procCameraInput(deltaTime);
-}
-
 void Controls::procSceneSwitch(int& currentSceneIdx, int sceneCount) {
     if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
         if (!tabPressed) {
@@ -131,19 +127,6 @@ void Controls::procBatteryToggle(MultiShaderForestScene* forestScene) {
         }
     } else {
         fPressed = false;
-    }
-}
-
-void Controls::procSkyboxToggle(ModelScene* modelScene) {
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
-        if (!tPressed) {
-            if (modelScene) {
-                modelScene->toggleSkyboxMode();
-            }
-            tPressed = true;
-        }
-    } else {
-        tPressed = false;
     }
 }
 

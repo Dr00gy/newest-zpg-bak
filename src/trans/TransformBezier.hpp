@@ -66,7 +66,7 @@ private:
             1.0f
         );
         
-        return T * basisMatrix * P; // left to right to get w and then x,y,z
+        return T * basisMatrix * P;
     }
     
     glm::vec3 calcTan() const {

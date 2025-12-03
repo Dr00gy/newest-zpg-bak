@@ -31,7 +31,7 @@ void WhackAMoleScene::init() {
     shrekTexture = std::make_unique<Texture>("src/images/shrek.png");
     fionaTexture = std::make_unique<Texture>("src/images/fiona.png");
     shroomTexture = std::make_unique<Texture>("src/images/hrib.jpg");
-    grassTexture = std::make_unique<Texture>("src/images/swamp.jpg");
+    grassTexture = std::make_unique<Texture>("src/images/swamp.png");
     hammerTexture = std::make_unique<Texture>("src/images/hammer.jpg");
 
     auto light1 = std::make_unique<Light>(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(1.0f), LightType::POINT);
@@ -198,7 +198,7 @@ void WhackAMoleScene::updateEnemies(float dt) {
                 e.isMoving = false;
             }
             e.moveTransform->setParam(t);
-            e.position = e.moveTransform->getPositionOnPath();
+            e.position = e.moveTransform->getPosOnPath();
 
             auto tr = std::make_shared<TransformComposite>();
             if (e.type == EnemyType::MUSHROOM) tr->add(std::make_shared<TransformTranslation>(glm::vec3(3,0,1)));

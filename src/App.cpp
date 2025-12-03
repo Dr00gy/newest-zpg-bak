@@ -86,7 +86,7 @@ void App::run() {
         if (controls->shouldClose()) {
             glfwSetWindowShouldClose(window, true);
         }
-        controls->procInput(deltaTime);
+        controls->procCameraInput(deltaTime);
         controls->procSceneSwitch(currentSceneIdx, scenes.size());
 
         // SCENE SPECIFIC INPUTS START
@@ -100,9 +100,6 @@ void App::run() {
         }
         controls->procWhackAMoleInput(whackAMoleScene);
         controls->procMouseHover(forestScene);
-        //
-        ModelScene* modelScene = dynamic_cast<ModelScene*>(scenes[currentSceneIdx].get());
-        controls->procSkyboxToggle(modelScene);
         // SCENE SPECIFIC INPUTS END
         
         if (!scenes.empty()) {

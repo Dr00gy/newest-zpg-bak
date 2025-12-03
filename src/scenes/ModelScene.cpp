@@ -56,8 +56,8 @@ void ModelScene::init() {
         "src/images/skybox/left.png",
         "src/images/skybox/top.png",
         "src/images/skybox/bottom.png",
-        "src/images/skybox/front.png",
-        "src/images/skybox/back.png"
+        "src/images/skybox/back.png",
+        "src/images/skybox/front.png"
     };
     skyboxTexture = std::make_unique<Texture>(skyboxFaces);
 
@@ -140,10 +140,9 @@ void ModelScene::init() {
     auto formulaTransform = std::make_shared<TransformComposite>();
     formulaTransform->add(formulaBezierTrans);
     formulaTransform->add(customWTransform);
-    formulaTransform->add(std::make_shared<TransformRotation>(-90.0f, glm::vec3(0,1,0)));
+    formulaTransform->add(std::make_shared<TransformRotation>(-270.0f, glm::vec3(0,1,0)));
     formulaTransform->add(std::make_shared<TransformTranslation>(glm::vec3(-2.0f, -1.0f, -2.0f)));
     formulaTransform->add(std::make_shared<TransformScale>(glm::vec3(0.1f, 0.1f, 0.1f)));
-    formulaTransform->add(std::make_shared<TransformRotation>(-180.0f, glm::vec3(0,1,0)));
     
     formulaObjIdx = objects.size();
     addObject(formulaModel.get(), modelShader2.get(), formulaTransform, nullptr, Material::Metal());
@@ -151,45 +150,23 @@ void ModelScene::init() {
 
 void ModelScene::drawSkybox() {
     if (!attachedCamera) return;
-    if (isInsideSkybox) {
-        glDepthFunc(GL_LEQUAL);
-        skyboxShader->use();
-        
-        glm::mat4 view = glm::mat4(glm::mat3(attachedCamera->getViewMat()));
-        skyboxShader->SetUniform("view", view);
-        skyboxShader->SetUniform("projection", attachedCamera->getProjMat());
-        
-        skyboxTexture->bind(0);
-        skyboxShader->SetUniform("skybox", 0);
-        skyboxModel->draw(GL_TRIANGLES);
+    glDepthFunc(GL_LEQUAL);
+    skyboxShader->use();
+    
+    glm::mat4 view = glm::mat4(glm::mat3(attachedCamera->getViewMat()));
+    skyboxShader->SetUniform("view", view);
+    skyboxShader->SetUniform("projection", attachedCamera->getProjMat());
+    
+    skyboxTexture->bind(0);
+    skyboxShader->SetUniform("skybox", 0);
+    skyboxModel->draw(GL_TRIANGLES);
 
-        glDepthFunc(GL_LESS);
-        glUseProgram(0);
-    } else {
-        cubeShader->use();
-        auto cubeTransform = std::make_shared<TransformComposite>();
-        cubeTransform->add(std::make_shared<TransformTranslation>(glm::vec3(0.0f, 0.0f, 0.0f)));
-        cubeTransform->add(std::make_shared<TransformScale>(glm::vec3(0.2f, 0.2f, 0.2f)));
-        
-        glm::mat4 model = cubeTransform->getMatrix();
-        cubeShader->SetUniform("model", model);
-        cubeShader->SetUniform("view", attachedCamera->getViewMat());
-        cubeShader->SetUniform("projection", attachedCamera->getProjMat());
-        
-        goldTexture->bind(0);
-        cubeShader->SetUniform("textureSampler", 0);
-        cubeShader->SetUniform("useTexture", true);
-        
-        skyboxModel->draw(GL_TRIANGLES);
-        
-        goldTexture->unbind();
-        glUseProgram(0);
-    }
+    glDepthFunc(GL_LESS);
+    glUseProgram(0);
 }
 
 void ModelScene::draw() {
     float time = static_cast<float>(glfwGetTime());
-    drawSkybox();
     
     if (formulaBezierTrans) {
         float t = fmod(time * bezierAnimSpeed, 1.0f);
@@ -212,6 +189,7 @@ void ModelScene::draw() {
     normalMapShader->updateAllLights();
     
     drawImpl();
+    drawSkybox();
 }
 
 
@@ -227,9 +205,4 @@ void ModelScene::detachFromCamera(Camera* camera) {
     if (camera && skyboxShader) {
         camera->detach(skyboxShader.get());
     }
-}
-
-void ModelScene::toggleSkyboxMode() {
-    isInsideSkybox = !isInsideSkybox;
-    std::cout << "Skybox mode is " << (isInsideSkybox ? "Inside" : "Outside") << std::endl;
 }

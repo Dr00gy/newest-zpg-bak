@@ -92,16 +92,16 @@ static inline void extractMeshData(const aiMesh* mesh, std::vector<float>& data,
     }
 }
 
-Model::Model(float* vertices, size_t size, int stride, ModelType type)
+Model::Model(float* vertices, size_t byte_cnt, int stride, ModelType type)
     : type(type)
 {
-    vertexCount = size / (stride * sizeof(float));
+    vertexCount = byte_cnt / (stride * sizeof(float));
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, byte_cnt, vertices, GL_STATIC_DRAW);
 
     bindAttributes(type, VAO, VBO, stride);
     glBindVertexArray(0);

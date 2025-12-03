@@ -31,12 +31,12 @@ public:
         return end;
     }
 
-    glm::vec3 getPositionOnPath() const {
+    glm::vec3 getPosOnPath() const {
         return glm::mix(start, end, param);
     }
 
     glm::mat4 getMatrix() const override {
-        glm::vec3 position = getPositionOnPath();
+        glm::vec3 position = getPosOnPath();
         return glm::translate(glm::mat4(1.0f), position);
     }
 

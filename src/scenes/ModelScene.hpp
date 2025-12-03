@@ -9,7 +9,6 @@ public:
     void draw() override;
     void attachToCamera(Camera* camera) override;
     void detachFromCamera(Camera* camera) override;
-    void toggleSkyboxMode();
 
 private:
     std::unique_ptr<Shader> modelShader;
@@ -44,5 +43,4 @@ private:
     float bezierAnimSpeed = 0.15f;
     //
     void drawSkybox();
-    bool isInsideSkybox = true;
 };

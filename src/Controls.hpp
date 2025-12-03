@@ -11,7 +11,7 @@ public:
     Controls(GLFWwindow* window, Camera* camera);
     
     void setupCallbacks();
-    void procInput(float deltaTime);
+    void procCameraInput(float deltaTime);
     void procSceneSwitch(int& currentSceneIdx, int sceneCount);
     void procBatteryToggle(MultiShaderForestScene* forestScene);
     void procSkyboxToggle(ModelScene* modelScene);
@@ -35,7 +35,6 @@ private:
     bool tPressed;
     bool mPressed;
     
-    void procCameraInput(float deltaTime);
     static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
